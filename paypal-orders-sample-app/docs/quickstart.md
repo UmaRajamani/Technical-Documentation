@@ -34,14 +34,18 @@ PAYPAL_SECRET=your_secret_here
 
 pip install -r requirements.txt
 
-Step 4: Start the Sample App
+---
+
+## Step 4: Start the Sample App
 python app.py
 
 The server runs at:
 
 http://127.0.0.1:5000
 
-Step 5: Create Your First Order
+---
+
+## Step 5: Create Your First Order
 Call the endpoint:
 
 curl http://127.0.0.1:5000/create-order
