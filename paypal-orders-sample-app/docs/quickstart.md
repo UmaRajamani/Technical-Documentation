@@ -24,7 +24,7 @@ Orders API. By the end, you will create a PayPal order using runnable code.
 
 Create a `.env` file:
 
-```bash
+bash
 PAYPAL_CLIENT_ID=your_client_id_here
 PAYPAL_SECRET=your_secret_here
 
