@@ -55,3 +55,11 @@ curl http://127.0.0.1:5000/create-order
   "id": "5O190127TN364715T",
   "status": "CREATED"
 }
+
+## Next Steps
+
+- Capture the order
+
+- Add webhook handling
+
+- Move from Sandbox to Live mode
