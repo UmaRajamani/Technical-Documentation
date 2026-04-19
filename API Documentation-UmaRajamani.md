@@ -192,7 +192,7 @@ Account status response includes Owner status match code, Match Result containin
 
 ```
 ## 5.2	Owner Inquiry
-Account owner authentication and evaluation is done by Early Warning. Account Owner Inquiry includes first name, last name, business name, Address 1, Address 2, City, State, Zip, Home Phone, Work Phone, Social Security number, Date of Birth, Account number, routing number, Free Attrib and type of the Inquiry.
+Account owner authentication and evaluation is done by Early Warning. Account Owner Inquiry includes first name, last name, business name, Address 1, Address 2, City, State, Zip, Home Phone, Work Phone, Social Security number, Date of Birth, Account number, routing number, Fee Attrib and type of the Inquiry.
 ### 5.2.1	Request Parameters
 |Parameter Name   |Possible Values | Field Length|Type| Requirement |
 |------------------|:--------------|:------------|:---|:------------|
