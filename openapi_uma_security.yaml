@@ -1,0 +1,575 @@
+openapi: "3.0.3"
+info:
+  title: "Account Authentication Service"
+  description: >
+    Account Authentication Service offers real-time verification of account ownership
+    by matching account owner data such as Account Name, SSN, DOB, Account Number,
+    and Routing Number. Calling parties access the service by invoking APIs. On receipt
+    of the authentication information, the calling party uses the verified data to carry
+    out risk assessment or take suitable action.
+  version: "1.1"
+  contact:
+    name: "Technical Support"
+    email: support@xxxxx.com
+
+servers:
+  - url: https://ew.xxxxxx.com/ew/rest/inquire
+    description: "Production environment (TCP/IP)"
+  - url: https://connectors.xxxxxxx.com:8443/ew/rest/inquire
+    description: "Sandbox environment (TCP/IP)"
+
+# ==========================================================================
+# SECURITY
+# ==========================================================================
+# Both schemes must be present on every request (AND relationship).
+# BasicAuth  — Base64-encoded API key + username sent as Basic Auth credential.
+# SignatureAuth — Digital signature sent in the X-Signature header.
+# The global security block applies both schemes to all operations by default.
+# Individual operations may override this if needed.
+# ==========================================================================
+security:
+  - BasicAuth: []
+    SignatureAuth: []
+
+# FIX 1 — Removed NATS URLs. OpenAPI 3.0 servers must use http/https schemes.
+# NATS endpoints (nats://) are not supported by the OpenAPI servers object.
+# Document NATS connectivity separately in your API user guide.
+
+paths:
+
+  # -----------------------------------------------------------------------
+  # ACCOUNT INQUIRY
+  # -----------------------------------------------------------------------
+  /inquire/account:
+    post:                          # FIX 2 — Changed GET to POST. The request
+                                   # carries credentials and a payload body;
+                                   # GET requests do not support a request body.
+      tags:
+        - Account Inquiry
+      summary: "Submit an Account Inquiry"
+      description: >
+        Evaluates the account information provided and returns the account status.
+        The request type must be set to ACCOUNT. Returns primary, secondary, and
+        additional account status codes, along with owner status and error codes.
+      operationId: accountInquiry
+      security:
+        - BasicAuth: []
+          SignatureAuth: []
+      requestBody:                 # FIX 3 — Moved request body from query
+                                   # parameters to requestBody, which is the
+                                   # correct OpenAPI location for POST payloads.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InquiryRequest'
+            example:
+              id: 21
+              jsonrpc: "2.0"
+              method: "ew.inquire"
+              params:
+                api:
+                  credential: "Basic Y2hyaXN0b3B0ZXIubXVycmF5QGRlcG9zaXQtc29sdXRpb25zLmNvbTo5MjUwNThiZGQ5MDU0ZDcxOTJmNDhhNTE4ZjQzZTk4NQ=="
+                  signature: "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg0nSRl9qZvY5mFY6W"
+                payload:
+                  type: "ACCOUNT"
+                  accountNumber: "61231234340"
+                  routingNumber: "122199983"
+                  feeAttrib: "BB"
+      responses:
+        '200':
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountInquiryResponse'
+        '400':
+          description: "Bad Request — bad syntax on one or more parameters."
+        '403':
+          description: "Forbidden — API key not enabled, token header missing, or incorrect format."
+        '415':
+          description: "Unsupported Media Type — Content-Type header is missing or incorrect."
+        '500':
+          description: "Internal Server Error — invalid credentials or non-whitelisted IP address."
+
+  # -----------------------------------------------------------------------
+  # OWNER INQUIRY                 # FIX 4 — Added missing Owner Inquiry path.
+  # -----------------------------------------------------------------------
+  /inquire/owner:
+    post:
+      tags:
+        - Owner Inquiry
+      summary: "Submit an Owner Inquiry"
+      description: >
+        Evaluates account owner information. The request type must be set to OWNER.
+        Returns owner status match codes and match result fields for the provided
+        owner details.
+      operationId: ownerInquiry
+      security:
+        - BasicAuth: []
+          SignatureAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InquiryRequest'
+            example:
+              id: 21
+              jsonrpc: "2.0"
+              method: "ew.inquire"
+              params:
+                api:
+                  credential: "Basic Y2hyaXN0b3B0ZXIubXVycmF5QGRlcG9zaXQtc29sdXRpb25zLmNvbTo5MjUwNThiZGQ5MDU0ZDcxOTJmNDhhNTE4ZjQzZTk4NQ=="
+                  signature: "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg0nSRl9qZvY5mFY6W"
+                payload:
+                  type: "OWNER"
+                  firstName: "Jane"
+                  lastName: "Viola"
+                  address1: "W 5th Street"
+                  city: "Manhattan"
+                  state: "NY"
+                  zip: "10020"
+                  homePhone: "9712452012"
+                  ssn: "911018872"
+                  dob: "19680407"
+                  accountNumber: "61231234340"
+                  routingNumber: "122199983"
+                  feeAttrib: "HH"
+      responses:
+        '200':
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerInquiryResponse'
+        '400':
+          description: "Bad Request"
+        '403':
+          description: "Forbidden"
+        '415':
+          description: "Unsupported Media Type"
+        '500':
+          description: "Internal Server Error"
+
+  # -----------------------------------------------------------------------
+  # BOTH ACCOUNT AND OWNER INQUIRY  # FIX 4 — Added missing Both Inquiry path.
+  # -----------------------------------------------------------------------
+  /inquire/both:
+    post:
+      tags:
+        - Both Inquiry
+      summary: "Submit a Combined Account and Owner Inquiry"
+      description: >
+        Evaluates both account and owner information in a single request.
+        The request type must be set to BOTH. Returns account status codes
+        as well as owner match result fields.
+      operationId: bothInquiry
+      security:
+        - BasicAuth: []
+          SignatureAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InquiryRequest'
+            example:
+              id: 21
+              jsonrpc: "2.0"
+              method: "ew.inquire"
+              params:
+                api:
+                  credential: "Basic Y2hyaXN0b3B0ZXIubXVycmF5QGRlcG9zaXQtc29sdXRpb25zLmNvbTo5MjUwNThiZGQ5MDU0ZDcxOTJmNDhhNTE4ZjQzZTk4NQ=="
+                  signature: "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg0nSRl9qZvY5mFY6W"
+                payload:
+                  type: "BOTH"
+                  firstName: "Jane"
+                  lastName: "Viola"
+                  address1: "W 5th Street"
+                  city: "Manhattan"
+                  state: "NY"
+                  zip: "10020"
+                  homePhone: "9712452012"
+                  ssn: "911018872"
+                  dob: "19680407"
+                  accountNumber: "61231234340"
+                  routingNumber: "101100045"
+                  feeAttrib: "HH"
+      responses:
+        '200':
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountInquiryResponse'
+        '400':
+          description: "Bad Request"
+        '403':
+          description: "Forbidden"
+        '415':
+          description: "Unsupported Media Type"
+        '500':
+          description: "Internal Server Error"
+
+# ==========================================================================
+# COMPONENTS
+# ==========================================================================
+components:
+
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: "Base64-encoded API key and username combination."
+    SignatureAuth:
+      type: apiKey
+      in: header
+      name: X-Signature
+      description: "Digital signature generated by signing the private key with the request payload."
+
+  schemas:
+
+    # ------------------------------------------------------------------
+    # SHARED REQUEST SCHEMA
+    # ------------------------------------------------------------------
+    InquiryRequest:
+      type: object
+      required:
+        - id
+        - jsonrpc
+        - method
+        - params
+      properties:
+        id:
+          type: integer
+          description: "Unique identifier for the request, echoed back in the response."
+          example: 21
+        jsonrpc:
+          type: string
+          description: "JSON-RPC protocol version. Must be 2.0."
+          example: "2.0"
+        method:
+          type: string
+          description: "RPC method name used by ABC Bank to identify the service type."
+          example: "ew.inquire"
+        params:
+          type: object
+          required:
+            - api
+            - payload
+          properties:
+            api:
+              $ref: '#/components/schemas/ApiCredentials'
+            payload:
+              $ref: '#/components/schemas/InquiryPayload'
+
+    # ------------------------------------------------------------------
+    # API CREDENTIALS
+    # ------------------------------------------------------------------
+    ApiCredentials:
+      type: object
+      required:
+        - credential
+        - signature
+      properties:
+        credential:
+          type: string
+          description: "Base64-encoded combination of API key and username for Basic Authentication."
+          example: "Basic Y2hyaXN0b3B0ZXIubXVycmF5QGRlcG9zaXQtc29sdXRpb25zLmNvbTo5MjUwNThiZGQ5MDU0ZDcxOTJmNDhhNTE4ZjQzZTk4NQ=="
+        signature:
+          type: string
+          description: "Digital signature generated by signing the private key with the requesting payload."
+          example: "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg0nSRl9qZvY5mFY6W"
+
+    # ------------------------------------------------------------------
+    # INQUIRY PAYLOAD
+    # ------------------------------------------------------------------
+    InquiryPayload:
+      type: object
+      required:
+        - type           # FIX 5 — Corrected field name from 'Type' to 'type'
+        - accountNumber  #         (consistent lowercase, matching JSON samples)
+        - routingNumber  # FIX 5 — Corrected typo 'routingNUmber' → 'routingNumber'
+        - feeAttrib      # FIX 5 — Corrected field name from 'freeAttrib' → 'feeAttrib'
+      properties:
+        type:
+          type: string
+          description: "Type of inquiry. Determines which service category is invoked."
+          enum:
+            - ACCOUNT
+            - OWNER
+            - BOTH
+          example: "ACCOUNT"
+        accountNumber:
+          type: string              # FIX 6 — Changed from integer to string.
+          description: >            #         Account numbers may have leading zeros
+            Account number containing only digits.    #  and exceed safe integer bounds.
+            Minimum 4 digits, maximum 17 digits.
+          pattern: '^\d{4,17}$'
+          example: "61231234340"
+        routingNumber:
+          type: string              # FIX 6 — Changed from integer to string.
+          description: >            #         Routing numbers are exactly 9 digits and
+            Nine-digit bank routing number assigned    #  may have leading zeros.
+            to US banks. Printed on the bottom of checks.
+          pattern: '^\d{9}$'
+          example: "122199983"
+        feeAttrib:
+          type: string
+          description: >
+            Fee attribute code indicating the transaction channel.
+            See the Fee Attribute table for full definitions.
+          enum:                     # FIX 7 — Enum contains only the code values.
+            - "AA"                  #         Descriptions belong in the table below,
+            - "BB"                  #         not inside the enum array.
+            - "CC"
+            - "DD"
+            - "EE"
+            - "FF"
+            - "GG"
+            - "HH"
+            - "II"
+            - "NT"
+            - "NA"
+            - "NR"
+            - "NW"
+          example: "BB"
+          x-enumDescriptions:      # Non-standard extension for display in Stoplight/Readme
+            AA: "RDC All"
+            BB: "RDC Consumer Home"
+            CC: "RDC Consumer Mobile"
+            DD: "RDC Small Business"
+            EE: "Branch/Teller"
+            FF: "ATM"
+            GG: "Lockbox/Mail/Corporate"
+            HH: "ACH - Deposit"
+            II: "Correspondent Presentment Transaction"
+            NT: "Teller Transactions"
+            NA: "ATM Transactions"
+            NR: "Back Office Transactions"
+            NW: "Internet/Web"
+        firstName:
+          type: string
+          maxLength: 40
+          description: "First name of the account holder. Required for OWNER and BOTH inquiry types (unless businessName is provided)."
+          example: "Jane"
+        lastName:
+          type: string
+          maxLength: 40
+          description: "Last name of the account holder. Required for OWNER and BOTH inquiry types (unless businessName is provided)."
+          example: "Viola"
+        businessName:
+          type: string
+          maxLength: 87
+          description: "Name of the organization. Required if firstName and lastName are not provided."
+          example: null
+        address1:
+          type: string
+          maxLength: 40
+          description: "Line 1 of the account holder's address."
+          example: "W 5th Street"
+        address2:
+          type: string
+          maxLength: 40
+          description: "Line 2 of the account holder's address."
+          example: ""
+        city:
+          type: string
+          maxLength: 25
+          description: "City where the account holder resides."
+          example: "Manhattan"
+        state:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: "Two-letter US state code."
+          example: "NY"
+        zip:
+          type: string
+          description: "Postal code of the account holder's address. 5 or 9 digits."
+          pattern: '^\d{5}(-\d{4})?$'
+          example: "10020"
+        homePhone:
+          type: string
+          pattern: '^\d{10}$'
+          description: "10-digit home phone number of the account holder."
+          example: "9712452012"
+        workPhone:
+          type: string
+          pattern: '^\d{10}$'
+          description: "10-digit work phone number of the account holder."
+          example: "9712452012"
+        ssn:
+          type: string
+          pattern: '^\d{9}$'
+          description: "9-digit Social Security Number of the account holder."
+          example: "911018872"
+        dob:
+          type: string
+          pattern: '^\d{8}$'
+          description: "Date of birth of the account holder in YYYYMMDD format."
+          example: "19680407"
+
+    # ------------------------------------------------------------------
+    # MATCH RESULT OBJECT (shared across response types)
+    # ------------------------------------------------------------------
+    MatchResult:
+      type: object
+      description: >
+        Match result object returned in response to OWNER and BOTH inquiries.
+        Each field returns Y (match), N (no match), or null (not evaluated).
+        For ACCOUNT-only inquiries, all fields return null.
+      properties:
+        firstName:
+          type: string
+          nullable: true
+          enum: ["Y", "N"]
+          description: "Indicates whether the first name matched."
+          example: "Y"
+        lastName:
+          type: string
+          nullable: true
+          enum: ["Y", "N"]
+          description: "Indicates whether the last name matched."
+          example: "Y"
+        businessName:
+          type: string
+          nullable: true
+          enum: ["Y", "N"]
+          description: "Indicates whether the business name matched."
+          example: null
+        ssn:
+          type: string
+          nullable: true
+          enum: ["Y", "N"]
+          description: "Indicates whether the SSN matched."
+          example: "N"
+        dob:
+          type: string
+          nullable: true
+          enum: ["Y", "N"]
+          description: "Indicates whether the date of birth matched."
+          example: "N"
+        city:
+          type: string
+          nullable: true
+          enum: ["Y", "N"]
+          description: "Indicates whether the city matched."
+          example: "N"
+        address:
+          type: string
+          nullable: true
+          enum: ["Y", "N"]
+          description: "Indicates whether the address matched."
+          example: "N"
+
+    # ------------------------------------------------------------------
+    # OWNER STATUS — extracted to its own schema  # FIX 8 — Status codes
+    # ------------------------------------------------------------------       moved out of the
+    OwnerStatus:                                   # description field and
+      type: string                                 # into a proper schema
+      description: >                               # with a $ref reference.
+        Four-character owner status code. The first character is the match code
+        (letter) and the remaining three characters are the participant status code (digits).
+
+        **Match Codes:**
+
+        | Code | Meaning |
+        |------|---------|
+        | Y    | Inquiry field closely or exactly matches the database |
+        | C    | Inquiry field conditionally (partially) matches the database |
+        | N    | Inquiry field does not match the database |
+        | U    | No identifying data available in the database for the account provided |
+
+        **Participant Status Codes (selected):**
+
+        | Hit Type     | Code | Name                        | Description |
+        |--------------|------|-----------------------------|-------------|
+        | Soft         | 000  | Not Located                 | Account does not exist on the Contributor's master file. May indicate misread or fraud. |
+        | Hard         | 002  | Closed For Cause            | Account closed by FSO due to unacceptable use. |
+        | Hard         | 003  | Closed for Cause/Purged     | Closed-for-cause account removed from master file. |
+        | Hard         | 004  | Stop Payment – 4 Field Individual | All four MICR fields match an individual stop-payment record. |
+        | Hard         | 005  | Stop Payment – 4 Field Range | All four MICR fields match a range stop-payment record. |
+        | Hard         | 010  | Post No Debits              | Account will not accept any debit activity. |
+        | Hard         | 012  | Closed                      | Account closed. |
+        | Hard         | 013  | Closed/Purged               | Closed account removed from master file. |
+        | Hard         | 014  | Pending Closed              | Account closed in last processing cycle. |
+        | Soft         | 030  | Overdrawn                   | Available balance less than zero. |
+        | Soft         | 031  | Overdrawn New Account       | Balance less than zero; account opened within 60 days. |
+        | Soft         | 034  | Dormant/Inactive            | Account dormant or inactive. |
+        | Informational| 096  | No Known Information        | No positive or negative information known about the account. |
+        | Informational| 099  | Present                     | Account is present with no other status code. |
+        | Hard         | 102  | Savings Closed for Cause    | Savings account closed due to unacceptable use. |
+        | Soft         | 130  | Savings Overdrawn           | Savings account available balance less than zero. |
+        | Informational| 199  | Savings Present             | Savings account present with no other status code. |
+
+        For the full status code table, refer to Appendix C of the API User Guide.
+      example: "C900"
+
+    # ------------------------------------------------------------------
+    # ACCOUNT INQUIRY RESPONSE
+    # ------------------------------------------------------------------
+    AccountInquiryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: "Request ID echoed from the original request."
+          example: 21
+        result:
+          type: object
+          properties:
+            ownerStatus:
+              $ref: '#/components/schemas/OwnerStatus'
+            matchResult:
+              $ref: '#/components/schemas/MatchResult'
+            priAccountStatus:
+              type: string
+              description: "Primary account status code. See Appendix C of the API User Guide for all possible values."
+              example: "S130"
+            secAccountStatus:
+              type: string
+              description: "Secondary account status code."
+              example: "000"
+            addAccountStatus:
+              type: string
+              description: "Additional account status code."
+              example: "000"
+            errorCode:
+              type: string
+              description: "Error code returned by Early Warning. 0 indicates no error. See Appendix D of the API User Guide for all error codes."
+              example: "0"
+            status:
+              type: string
+              description: "Indicates whether the request and response were transmitted successfully."
+              enum:
+                - "OK"
+              example: "OK"
+
+    # ------------------------------------------------------------------
+    # OWNER INQUIRY RESPONSE
+    # ------------------------------------------------------------------
+    OwnerInquiryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: "Request ID echoed from the original request."
+          example: 21
+        result:
+          type: object
+          properties:
+            ownerStatus:
+              $ref: '#/components/schemas/OwnerStatus'
+            matchResult:
+              $ref: '#/components/schemas/MatchResult'
+            errorCode:
+              type: string
+              description: "Error code. 0 indicates no error."
+              example: "0"
+            status:
+              type: string
+              enum:
+                - "OK"
+              example: "OK"
