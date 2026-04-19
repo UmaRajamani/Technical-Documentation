@@ -1,0 +1,499 @@
+{
+  "info": {
+    "name": "PayPal Orders & Payments API",
+    "description": "## Overview\nThis Postman collection covers the complete PayPal Orders v2 + Payments API workflow using PayPal's **free sandbox environment**. No real money is ever processed.\n\n## How to Get Free Sandbox Credentials\n1. Go to https://developer.paypal.com and sign in with any PayPal account\n2. Navigate to **My Apps & Credentials → REST API apps → Create App**\n3. Name your app and click **Create App**\n4. Copy the **Sandbox Client ID** and **Client Secret**\n5. Go to **Testing Tools → Sandbox Accounts** to find your buyer and seller test accounts\n\n## Setting Up This Collection (Step by Step)\n\n### Step 1 — Create a Postman environment\n1. Click **Environments** in the left sidebar → **New**\n2. Name it: `PayPal Sandbox`\n3. Add these variables:\n   - `base_url` → `https://api-m.sandbox.paypal.com`\n   - `client_id` → your Sandbox Client ID\n   - `client_secret` → your Sandbox Client Secret\n   - `access_token` → *(leave blank — auto-filled)*\n   - `order_id` → *(leave blank — auto-filled)*\n   - `capture_id` → *(leave blank — auto-filled)*\n4. Click **Save** and select this environment from the top-right dropdown\n\n### Step 2 — Run requests in order\nRun each folder top-to-bottom. Test scripts automatically save IDs and tokens — no manual copy-paste needed.\n\n## Authentication\nAll requests (except Authentication) use:\n```\nAuthorization: Bearer {{access_token}}\n```\nThe token is auto-saved after Step 1 and expires after ~9 hours.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "paypal-orders-collection-v2"
+  },
+  "variable": [
+    { "key": "base_url",      "value": "https://api-m.sandbox.paypal.com" },
+    { "key": "access_token",  "value": "" },
+    { "key": "order_id",      "value": "" },
+    { "key": "capture_id",    "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "description": "Exchange your Client ID and Client Secret for an OAuth 2.0 Bearer token. The test script auto-saves the token — all subsequent requests use it automatically.",
+      "item": [
+        {
+          "name": "POST — Get Access Token",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Build the Basic Auth header manually from environment variables.",
+                  "// This is the most reliable method in Postman — avoids the",
+                  "// Authorization tab being overridden by collection-level auth.",
+                  "const clientId     = pm.environment.get('client_id');",
+                  "const clientSecret = pm.environment.get('client_secret');",
+                  "",
+                  "if (!clientId || !clientSecret) {",
+                  "    throw new Error(",
+                  "        'client_id or client_secret is missing from your environment. ' +",
+                  "        'Open the PayPal Sandbox environment and fill in both values.'",
+                  "    );",
+                  "}",
+                  "",
+                  "// Base64-encode \"clientId:clientSecret\" — same as what -u does in cURL",
+                  "const credentials = btoa(clientId + ':' + clientSecret);",
+                  "pm.request.headers.upsert({",
+                  "    key:   'Authorization',",
+                  "    value: 'Basic ' + credentials",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Step 1: Check HTTP status — show a helpful message on 401",
+                  "pm.test('Status is 200', function () {",
+                  "    if (pm.response.code === 401) {",
+                  "        console.error('401 Unauthorized — credentials are wrong or missing.');",
+                  "        console.error('Check that client_id and client_secret are set correctly');",
+                  "        console.error('in your PayPal Sandbox environment and match your');",
+                  "        console.error('Sandbox app at developer.paypal.com → My Apps & Credentials.');",
+                  "    }",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Step 2: Only proceed if we got a 200",
+                  "if (pm.response.code !== 200) { return; }",
+                  "",
+                  "// Step 3: Parse response and validate token",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('access_token present in response', function () {",
+                  "    pm.expect(json).to.have.property('access_token');",
+                  "    pm.expect(json.access_token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "",
+                  "// Step 4: Save token — all subsequent requests use {{access_token}}",
+                  "pm.environment.set('access_token', json.access_token);",
+                  "",
+                  "// Step 5: Log useful info",
+                  "const expiresInMinutes = json.expires_in ? Math.round(json.expires_in / 60) : '?';",
+                  "const preview = json.access_token ? json.access_token.substring(0, 20) + '...' : '(none)';",
+                  "console.log('Token saved successfully.');",
+                  "console.log('Expires in:', expiresInMinutes, 'minutes (~9 hours).');",
+                  "console.log('Preview:', preview);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials",
+                  "description": "Required. Always client_credentials for server-to-server calls."
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/oauth2/token",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "oauth2", "token"]
+            },
+            "description": "Exchanges your Client ID and Client Secret for a Bearer access token.\n\n**How auth works here:** The pre-request script reads `client_id` and `client_secret` from your environment, Base64-encodes them as `clientId:clientSecret`, and injects the `Authorization: Basic ...` header automatically — exactly what cURL's `-u` flag does. This is the most reliable approach in Postman.\n\n**Before running:**\n- Open the `PayPal Sandbox` environment\n- Set `client_id` → your Sandbox Client ID\n- Set `client_secret` → your Sandbox Client Secret\n- Both are on your app page at developer.paypal.com → My Apps & Credentials\n\n**After running:**\n- `access_token` is auto-saved to your environment\n- All subsequent requests pick it up via `{{access_token}}`\n- Tokens expire after ~9 hours. Re-run this request to get a fresh one."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Orders",
+      "description": "Create and manage PayPal orders. An order represents a payment intent that goes through three stages: CREATED → APPROVED (by buyer) → COMPLETED (after capture).",
+      "item": [
+        {
+          "name": "POST — Create Order",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Guard: ensure we have a token before creating an order",
+                  "if (!pm.environment.get('access_token')) {",
+                  "    throw new Error('No access_token found. Run Step 1 (Get Access Token) first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Order created (201)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "// Validate order status",
+                  "pm.test('Order status is CREATED', function () {",
+                  "    pm.expect(json.status).to.equal('CREATED');",
+                  "});",
+                  "",
+                  "// Auto-save order ID",
+                  "pm.environment.set('order_id', json.id);",
+                  "console.log('order_id saved:', json.id);",
+                  "",
+                  "// Extract and log the approve link for the buyer",
+                  "const approveLink = json.links.find(l => l.rel === 'approve');",
+                  "if (approveLink) {",
+                  "    console.log('Buyer approval URL:', approveLink.href);",
+                  "    console.log('Open this URL in a browser and log in with your sandbox BUYER account to approve.');",
+                  "} else {",
+                  "    console.warn('No approve link found in response.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",      "value": "application/json" },
+              { "key": "PayPal-Request-Id", "value": "{{$randomUUID}}", "description": "Unique ID for idempotency — prevents duplicate orders on retry" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"intent\": \"CAPTURE\",\n  \"purchase_units\": [\n    {\n      \"reference_id\": \"order_1042\",\n      \"description\": \"Order #1042 — Premium Plan\",\n      \"amount\": {\n        \"currency_code\": \"USD\",\n        \"value\": \"50.00\",\n        \"breakdown\": {\n          \"item_total\": {\n            \"currency_code\": \"USD\",\n            \"value\": \"45.00\"\n          },\n          \"tax_total\": {\n            \"currency_code\": \"USD\",\n            \"value\": \"5.00\"\n          }\n        }\n      },\n      \"items\": [\n        {\n          \"name\": \"Premium Plan — Monthly\",\n          \"quantity\": \"1\",\n          \"unit_amount\": {\n            \"currency_code\": \"USD\",\n            \"value\": \"45.00\"\n          },\n          \"category\": \"DIGITAL_GOODS\"\n        }\n      ]\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v2/checkout/orders",
+              "host": ["{{base_url}}"],
+              "path": ["v2", "checkout", "orders"]
+            },
+            "description": "Creates a PayPal order in `CREATED` status.\n\n**What happens next:**\n1. The test script extracts and logs the **approve URL** from the response `links` array\n2. Open that URL in a browser and sign in with your **sandbox BUYER account** (from Testing Tools → Sandbox Accounts) to simulate customer approval\n3. After the buyer approves, run the **Capture Order** request to finalise the payment\n\n**Key fields:**\n- `intent: CAPTURE` — capture immediately after buyer approval (most common flow)\n- `intent: AUTHORIZE` — authorize only; use a separate capture call later\n- `PayPal-Request-Id` header — set to a unique UUID for safe retries (Postman auto-generates one)\n\n**order_id is auto-saved** after this request runs successfully."
+          }
+        },
+        {
+          "name": "GET — Get Order Details",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const status = json.status;",
+                  "console.log('Current order status:', status);",
+                  "",
+                  "if (status === 'APPROVED') {",
+                  "    console.log('Order approved by buyer. Ready to capture. Run Step 3.');",
+                  "} else if (status === 'CREATED') {",
+                  "    console.log('Buyer has NOT approved yet. Open the approve URL from Step 2.');",
+                  "} else if (status === 'COMPLETED') {",
+                  "    console.log('Order already captured and completed.');",
+                  "} else {",
+                  "    console.warn('Unexpected status:', status);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}" }]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v2/checkout/orders/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v2", "checkout", "orders", "{{order_id}}"]
+            },
+            "description": "Retrieves the current status and full details of an order.\n\n**Use this to check if the buyer has approved the order before attempting capture.**\n\nThe test script logs a clear message based on the current status:\n- `CREATED` — buyer has not approved yet\n- `APPROVED` — ready to capture (run Step 3)\n- `COMPLETED` — payment already captured"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Capture Payment",
+      "description": "Capture an approved order to finalise the payment and move funds. The order must be in APPROVED status before capture.",
+      "item": [
+        {
+          "name": "POST — Capture Order",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Guard: ensure we have an order_id before attempting capture",
+                  "if (!pm.environment.get('order_id')) {",
+                  "    throw new Error('No order_id found. Run Step 2 (Create Order) first.');",
+                  "}",
+                  "console.log('Capturing order:', pm.environment.get('order_id'));",
+                  "console.log('Reminder: The buyer must have approved this order first (status = APPROVED).');"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Capture successful (201)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Order status is COMPLETED', function () {",
+                  "    pm.expect(json.status).to.equal('COMPLETED');",
+                  "});",
+                  "",
+                  "// Extract and save the capture ID — needed for refunds",
+                  "try {",
+                  "    const captures = json.purchase_units[0].payments.captures;",
+                  "    if (captures && captures.length > 0) {",
+                  "        const captureId = captures[0].id;",
+                  "        const captureStatus = captures[0].status;",
+                  "        const amount = captures[0].amount;",
+                  "        pm.environment.set('capture_id', captureId);",
+                  "        console.log('capture_id saved:', captureId);",
+                  "        console.log('Capture status:', captureStatus);",
+                  "        console.log('Amount captured:', amount.currency_code, amount.value);",
+                  "    }",
+                  "} catch (e) {",
+                  "    console.warn('Could not extract capture_id:', e.message);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",      "value": "application/json" },
+              { "key": "PayPal-Request-Id", "value": "{{$randomUUID}}", "description": "Unique UUID for idempotent capture — safe to retry on network failure" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v2/checkout/orders/{{order_id}}/capture",
+              "host": ["{{base_url}}"],
+              "path": ["v2", "checkout", "orders", "{{order_id}}", "capture"]
+            },
+            "description": "Finalises payment for an approved order and moves funds to the seller.\n\n**Pre-condition:** The order must be in `APPROVED` status. Run **Get Order Details** first to confirm.\n\n**Request body:** An empty JSON object `{}` is sufficient for a standard capture.\n\n**After running:**\n- `capture_id` is auto-saved from `purchase_units[0].payments.captures[0].id`\n- This capture ID is required to issue a refund in Step 4\n\n**Capture statuses:**\n- `COMPLETED` — funds captured successfully\n- `DECLINED` — capture rejected by PayPal\n- `PENDING` — capture is being reviewed\n- `PARTIALLY_REFUNDED` — some amount has been refunded\n- `REFUNDED` — fully refunded"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Refunds",
+      "description": "Issue full or partial refunds against a captured payment. Requires the capture_id saved from Step 3.",
+      "item": [
+        {
+          "name": "POST — Refund Capture (Partial)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Guard: ensure we have a capture_id",
+                  "if (!pm.environment.get('capture_id')) {",
+                  "    throw new Error('No capture_id found. Run Step 3 (Capture Order) first.');",
+                  "}",
+                  "console.log('Refunding capture:', pm.environment.get('capture_id'));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Refund issued (201)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test('Refund status is COMPLETED', function () {",
+                  "    pm.expect(json.status).to.equal('COMPLETED');",
+                  "});",
+                  "",
+                  "console.log('Refund ID:', json.id);",
+                  "console.log('Refund status:', json.status);",
+                  "console.log('Amount refunded:', json.amount.currency_code, json.amount.value);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",      "value": "application/json" },
+              { "key": "PayPal-Request-Id", "value": "{{$randomUUID}}", "description": "Unique UUID — prevents duplicate refunds if the request is retried" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {\n    \"value\": \"25.00\",\n    \"currency_code\": \"USD\"\n  },\n  \"note_to_payer\": \"Partial refund for returned item\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v2/payments/captures/{{capture_id}}/refund",
+              "host": ["{{base_url}}"],
+              "path": ["v2", "payments", "captures", "{{capture_id}}", "refund"]
+            },
+            "description": "Issues a **partial refund** of $25.00 against the captured payment.\n\n**To issue a full refund:** Remove the `amount` field from the request body entirely — PayPal will refund the full captured amount.\n\n**`note_to_payer`** appears in the buyer's PayPal account transaction history.\n\n**Important:** Include a unique `PayPal-Request-Id` header on every refund request. This prevents duplicate refunds if the request is retried after a network timeout.\n\n**Refund statuses:**\n- `COMPLETED` — refund processed\n- `PENDING` — refund under review\n- `CANCELLED` — refund was cancelled\n- `FAILED` — refund failed; contact PayPal support"
+          }
+        },
+        {
+          "name": "POST — Refund Capture (Full)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get('capture_id')) {",
+                  "    throw new Error('No capture_id found. Run Step 3 (Capture Order) first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Full refund issued (201)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "console.log('Full refund ID:', json.id);",
+                  "console.log('Status:', json.status);",
+                  "console.log('Amount:', json.amount.currency_code, json.amount.value);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",      "value": "application/json" },
+              { "key": "PayPal-Request-Id", "value": "{{$randomUUID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note_to_payer\": \"Full refund issued\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v2/payments/captures/{{capture_id}}/refund",
+              "host": ["{{base_url}}"],
+              "path": ["v2", "payments", "captures", "{{capture_id}}", "refund"]
+            },
+            "description": "Issues a **full refund** by omitting the `amount` field. PayPal refunds the entire captured amount automatically."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Webhooks",
+      "description": "Register a URL to receive real-time PayPal event notifications. Useful for payment.capture.completed, refund events, and order lifecycle changes.",
+      "item": [
+        {
+          "name": "POST — Create Webhook",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Webhook created (201)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('webhook_id', json.id);",
+                  "console.log('Webhook ID saved:', json.id);",
+                  "console.log('Listening for events:', json.event_types.map(e => e.name).join(', '));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://yourapp.com/webhooks/paypal\",\n  \"event_types\": [\n    { \"name\": \"PAYMENT.CAPTURE.COMPLETED\" },\n    { \"name\": \"PAYMENT.CAPTURE.REFUNDED\" },\n    { \"name\": \"CHECKOUT.ORDER.APPROVED\" },\n    { \"name\": \"PAYMENT.CAPTURE.DENIED\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/notifications/webhooks",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "notifications", "webhooks"]
+            },
+            "description": "Registers a URL to receive PayPal event notifications.\n\n**Replace the URL** with your real endpoint before running. For local testing, use a tunnelling tool like [ngrok](https://ngrok.com) to expose localhost:\n```\nngrok http 5000\n```\nThen use the generated `https://xxxx.ngrok.io` URL.\n\n**Supported events registered here:**\n- `PAYMENT.CAPTURE.COMPLETED` — funds captured; fulfil the order\n- `PAYMENT.CAPTURE.REFUNDED` — refund processed; update your records\n- `CHECKOUT.ORDER.APPROVED` — buyer approved; ready to capture\n- `PAYMENT.CAPTURE.DENIED` — capture rejected; notify the buyer\n\n**Verifying webhook signatures:** PayPal signs every event with 5 headers. See the OpenAPI spec (`openapi-paypal.yaml`) for the full Python verification example."
+          }
+        },
+        {
+          "name": "GET — List Webhooks",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}" }]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/notifications/webhooks",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "notifications", "webhooks"]
+            },
+            "description": "Lists all webhook endpoints registered to your app. Use this to confirm your webhook was created and to retrieve webhook IDs for updates or deletions."
+          }
+        }
+      ]
+    }
+  ]
+}

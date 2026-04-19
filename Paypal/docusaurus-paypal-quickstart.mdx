@@ -1,0 +1,500 @@
+---
+id: paypal-python-quickstart
+title: PayPal Orders API — Python Quickstart
+sidebar_label: Python Quickstart
+sidebar_position: 2
+description: Learn how to authenticate, create an order, capture a payment, and issue a refund using PayPal's free sandbox and the official Python SDK.
+tags: [paypal, python, payments, quickstart, sandbox]
+---
+
+import Admonition from '@theme/Admonition';
+
+# PayPal Orders API — Python Quickstart
+
+This guide walks you through the complete PayPal payment lifecycle using Python and PayPal's **free sandbox environment**. You will authenticate with OAuth 2.0, create an order, simulate buyer approval, capture the payment, and issue a refund.
+
+**What you'll build:** A Python script that creates a $50.00 order, captures the payment, and issues a partial refund — entirely in sandbox with no real money involved.
+
+**Time to complete:** ~15 minutes
+
+---
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- Python 3.7 or higher
+- A PayPal developer account (free — see Step 1 below)
+- pip for installing packages
+
+---
+
+## Step 1 — Create a Free PayPal Developer Account
+
+PayPal's sandbox is completely free. You only need an existing PayPal account.
+
+1. Go to [developer.paypal.com](https://developer.paypal.com) and sign in with any PayPal account
+2. Navigate to **My Apps & Credentials → REST API apps → Create App**
+3. Name your app (e.g. `My Python Integration`) and click **Create App**
+4. Under **Sandbox**, copy your **Client ID** and **Client Secret**
+5. Go to **Testing Tools → Sandbox Accounts** — note your **personal (buyer)** and **business (seller)** sandbox account emails
+
+<Admonition type="tip" title="Two sandbox accounts">
+PayPal creates two sandbox accounts automatically: a **personal account** (simulates a buyer paying) and a **business account** (your merchant / seller). You'll use the personal account to approve payments in Step 5.
+</Admonition>
+
+---
+
+## Step 2 — Install the PayPal Python SDK
+
+Install the official PayPal Server SDK from PyPI:
+
+```bash
+pip install paypalserversdk
+```
+
+Verify the installation:
+
+```bash
+python -c "import paypalserversdk; print('PayPal SDK ready')"
+```
+
+---
+
+## Step 3 — Configure Your Credentials
+
+Store your credentials as environment variables — never hard-code secrets in source files.
+
+```bash
+# macOS / Linux
+export PAYPAL_CLIENT_ID="AaBbCcxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+export PAYPAL_CLIENT_SECRET="EeFfGgxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# Windows (Command Prompt)
+set PAYPAL_CLIENT_ID=AaBbCcxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+set PAYPAL_CLIENT_SECRET=EeFfGgxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+<Admonition type="warning" title="Keep credentials secret">
+Never commit your Client ID or Secret to version control. Add `.env` to your `.gitignore` and use `python-dotenv` to load credentials from a local file in development.
+</Admonition>
+
+Now create your SDK client. Set `environment=Environment.SANDBOX` to use the free test environment:
+
+```python
+import os
+import logging
+from paypalserversdk.paypal_serversdk_client import PaypalServersdkClient
+from paypalserversdk.configuration import Environment
+from paypalserversdk.http.auth.o_auth_2 import ClientCredentialsAuthCredentials
+from paypalserversdk.logging.configuration.api_logging_configuration import (
+    LoggingConfiguration,
+    RequestLoggingConfiguration,
+    ResponseLoggingConfiguration,
+)
+
+client = PaypalServersdkClient(
+    client_credentials_auth_credentials=ClientCredentialsAuthCredentials(
+        o_auth_client_id=os.environ["PAYPAL_CLIENT_ID"],
+        o_auth_client_secret=os.environ["PAYPAL_CLIENT_SECRET"],
+    ),
+    environment=Environment.SANDBOX,  # Change to Environment.PRODUCTION to go live
+    logging_configuration=LoggingConfiguration(
+        log_level=logging.INFO,
+        request_logging_config=RequestLoggingConfiguration(log_body=True),
+        response_logging_config=ResponseLoggingConfiguration(log_headers=True),
+    ),
+)
+
+print("Client configured for PayPal Sandbox")
+# The SDK handles OAuth token retrieval and refresh automatically.
+```
+
+<Admonition type="info" title="Automatic token management">
+The SDK fetches and refreshes OAuth 2.0 tokens automatically. You don't need to call `/v1/oauth2/token` manually — just configure the client once and use it for all API calls.
+</Admonition>
+
+---
+
+## Step 4 — Create an Order
+
+An order represents a payment intent. When you create one with `intent=CAPTURE`, PayPal returns an `approve` URL. The buyer must visit that URL to authorise the payment before you can capture funds.
+
+```python
+import uuid
+from paypalserversdk.models.create_order_request import CreateOrderRequest
+from paypalserversdk.models.order_request import OrderRequest
+from paypalserversdk.models.checkout_payment_intent import CheckoutPaymentIntent
+from paypalserversdk.models.purchase_unit_request import PurchaseUnitRequest
+from paypalserversdk.models.amount_with_breakdown import AmountWithBreakdown
+from paypalserversdk.models.amount_breakdown import AmountBreakdown
+from paypalserversdk.models.money import Money
+from paypalserversdk.models.item import Item
+from paypalserversdk.models.items_category import ItemsCategory
+
+# Create the order
+result = client.orders_controller.create_order(
+    CreateOrderRequest(
+        body=OrderRequest(
+            intent=CheckoutPaymentIntent.CAPTURE,
+            purchase_units=[
+                PurchaseUnitRequest(
+                    reference_id="order_1042",
+                    description="Order #1042 — Premium Plan",
+                    amount=AmountWithBreakdown(
+                        currency_code="USD",
+                        value="50.00",
+                        breakdown=AmountBreakdown(
+                            item_total=Money(currency_code="USD", value="45.00"),
+                            tax_total=Money(currency_code="USD", value="5.00"),
+                        ),
+                    ),
+                    items=[
+                        Item(
+                            name="Premium Plan — Monthly",
+                            quantity="1",
+                            unit_amount=Money(currency_code="USD", value="45.00"),
+                            category=ItemsCategory.DIGITAL_GOODS,
+                        )
+                    ],
+                )
+            ],
+        ),
+        prefer="return=representation",
+        paypal_request_id=str(uuid.uuid4()),  # Unique ID for safe retries
+    )
+)
+
+order = result.body
+order_id = order.id
+print(f"Order created: {order_id}")
+print(f"Status: {order.status}")  # CREATED
+
+# Extract the approve URL from HATEOAS links
+approve_url = next(
+    (link.href for link in order.links if link.rel == "approve"),
+    None
+)
+print(f"\nBuyer approval URL:\n{approve_url}")
+print("\nOpen this URL in a browser and sign in with your sandbox BUYER account to approve.")
+```
+
+**Example output:**
+
+```
+Order created: 5O190127TN364715T
+Status: CREATED
+
+Buyer approval URL:
+https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T
+
+Open this URL in a browser and sign in with your sandbox BUYER account to approve.
+```
+
+---
+
+## Step 5 — Simulate Buyer Approval (Sandbox Only)
+
+In sandbox, you simulate the buyer approving the payment manually:
+
+1. Copy the approval URL printed in Step 4
+2. Open it in a browser
+3. Sign in using your **sandbox personal (buyer) account** credentials
+   - Find these at [developer.paypal.com → Testing Tools → Sandbox Accounts](https://developer.paypal.com/tools/sandbox/accounts/)
+4. Click **Pay Now** to approve the payment
+5. After approval, the order status changes to `APPROVED`
+
+<Admonition type="tip" title="Check order status before capturing">
+Use `client.orders_controller.get_order(order_id=order_id)` to confirm the order is `APPROVED` before attempting capture. Capture will fail with a 422 error if the buyer has not yet approved.
+</Admonition>
+
+```python
+# Check order status after buyer approval
+status_result = client.orders_controller.get_order(order_id=order_id)
+print(f"Order status: {status_result.body.status}")
+# Expected: APPROVED
+```
+
+---
+
+## Step 6 — Capture the Payment
+
+Once the buyer has approved the order (status = `APPROVED`), capture the payment to move funds to your seller account:
+
+```python
+from paypalserversdk.models.capture_order_input import CaptureOrderInput
+
+capture_result = client.orders_controller.capture_order(
+    CaptureOrderInput(
+        id=order_id,
+        paypal_request_id=str(uuid.uuid4()),  # New UUID for idempotent capture
+    )
+)
+
+captured_order = capture_result.body
+print(f"Order status: {captured_order.status}")  # COMPLETED
+
+# Extract the capture ID — you need this to issue refunds
+captures = captured_order.purchase_units[0].payments.captures
+capture = captures[0]
+capture_id = capture.id
+
+print(f"Capture ID:     {capture_id}")
+print(f"Capture status: {capture.status}")     # COMPLETED
+print(f"Amount:         {capture.amount.currency_code} {capture.amount.value}")
+```
+
+**Example output:**
+
+```
+Order status: COMPLETED
+Capture ID:     3C679366HH908993F
+Capture status: COMPLETED
+Amount:         USD 50.00
+```
+
+<Admonition type="warning" title="Store the capture ID">
+Save `capture_id` to your database immediately after a successful capture. You need it to issue refunds. The capture ID is not derivable from the order ID alone.
+</Admonition>
+
+---
+
+## Step 7 — Issue a Refund
+
+Use the `capture_id` from Step 6 to issue a full or partial refund:
+
+```python
+from paypalserversdk.models.refund_capture_input import RefundCaptureInput
+from paypalserversdk.models.refund_request import RefundRequest
+
+# --- Partial refund ---
+partial_refund = client.payments_controller.refund_capture(
+    RefundCaptureInput(
+        capture_id=capture_id,
+        paypal_request_id=str(uuid.uuid4()),
+        body=RefundRequest(
+            amount=Money(value="25.00", currency_code="USD"),
+            note_to_payer="Partial refund for returned item",
+        ),
+    )
+)
+
+print(f"Partial refund status: {partial_refund.body.status}")   # COMPLETED
+print(f"Refund ID:             {partial_refund.body.id}")
+print(f"Amount refunded:       USD {partial_refund.body.amount.value}")
+```
+
+**To issue a full refund**, omit the `amount` field entirely:
+
+```python
+# --- Full refund ---
+full_refund = client.payments_controller.refund_capture(
+    RefundCaptureInput(
+        capture_id=capture_id,
+        paypal_request_id=str(uuid.uuid4()),
+        body=RefundRequest(
+            note_to_payer="Full refund issued",
+            # No amount field = full refund of captured amount
+        ),
+    )
+)
+print(f"Full refund status: {full_refund.body.status}")  # COMPLETED
+```
+
+---
+
+## Step 8 — Handle Errors
+
+Wrap API calls with proper error handling for production use:
+
+```python
+from paypalserversdk.exceptions.error_exception import ErrorException
+from paypalserversdk.exceptions.api_exception import ApiException
+
+try:
+    result = client.orders_controller.capture_order(
+        CaptureOrderInput(id=order_id)
+    )
+    print("Capture succeeded:", result.body.status)
+
+except ErrorException as e:
+    # PayPal API-level error (e.g., order not approved, duplicate capture)
+    print(f"PayPal API error: {e.message}")
+    print(f"Error name:       {e.name if hasattr(e, 'name') else 'N/A'}")
+    print(f"HTTP status:      {e.response_code}")
+
+    # PayPal returns structured error details
+    if hasattr(e, 'details') and e.details:
+        for detail in e.details:
+            print(f"  Field: {detail.get('field', 'N/A')}")
+            print(f"  Issue: {detail.get('issue', 'N/A')}")
+
+except ApiException as e:
+    # SDK-level error (network, timeout, malformed response)
+    print(f"SDK/network error: {e}")
+
+except Exception as e:
+    print(f"Unexpected error: {e}")
+```
+
+---
+
+## Complete Script
+
+Here is the full end-to-end script combining all steps:
+
+```python
+"""
+PayPal Orders API — complete sandbox workflow
+Requires: pip install paypalserversdk python-dotenv
+"""
+import os
+import uuid
+import logging
+
+from paypalserversdk.paypal_serversdk_client import PaypalServersdkClient
+from paypalserversdk.configuration import Environment
+from paypalserversdk.http.auth.o_auth_2 import ClientCredentialsAuthCredentials
+from paypalserversdk.models.create_order_request import CreateOrderRequest
+from paypalserversdk.models.order_request import OrderRequest
+from paypalserversdk.models.checkout_payment_intent import CheckoutPaymentIntent
+from paypalserversdk.models.purchase_unit_request import PurchaseUnitRequest
+from paypalserversdk.models.amount_with_breakdown import AmountWithBreakdown
+from paypalserversdk.models.money import Money
+from paypalserversdk.models.capture_order_input import CaptureOrderInput
+from paypalserversdk.models.refund_capture_input import RefundCaptureInput
+from paypalserversdk.models.refund_request import RefundRequest
+from paypalserversdk.exceptions.error_exception import ErrorException
+
+# ── 1. Configure client ────────────────────────────────────────────────────────
+client = PaypalServersdkClient(
+    client_credentials_auth_credentials=ClientCredentialsAuthCredentials(
+        o_auth_client_id=os.environ["PAYPAL_CLIENT_ID"],
+        o_auth_client_secret=os.environ["PAYPAL_CLIENT_SECRET"],
+    ),
+    environment=Environment.SANDBOX,
+)
+
+# ── 2. Create order ────────────────────────────────────────────────────────────
+print("Creating order...")
+result = client.orders_controller.create_order(
+    CreateOrderRequest(
+        body=OrderRequest(
+            intent=CheckoutPaymentIntent.CAPTURE,
+            purchase_units=[
+                PurchaseUnitRequest(
+                    amount=AmountWithBreakdown(
+                        currency_code="USD",
+                        value="50.00",
+                    ),
+                    description="Order #1042 — Premium Plan",
+                )
+            ],
+        ),
+        paypal_request_id=str(uuid.uuid4()),
+    )
+)
+
+order_id = result.body.id
+approve_url = next(l.href for l in result.body.links if l.rel == "approve")
+print(f"Order ID:    {order_id}")
+print(f"Approve URL: {approve_url}\n")
+
+# ── 3. Wait for buyer approval ─────────────────────────────────────────────────
+input("Open the approve URL in a browser, log in as the BUYER, and press Enter when done...")
+
+# ── 4. Verify approval ─────────────────────────────────────────────────────────
+status = client.orders_controller.get_order(order_id=order_id).body.status
+print(f"Order status: {status}")
+assert status == "APPROVED", f"Expected APPROVED, got {status}"
+
+# ── 5. Capture payment ─────────────────────────────────────────────────────────
+print("Capturing payment...")
+try:
+    capture_result = client.orders_controller.capture_order(
+        CaptureOrderInput(id=order_id, paypal_request_id=str(uuid.uuid4()))
+    )
+    capture = capture_result.body.purchase_units[0].payments.captures[0]
+    capture_id = capture.id
+    print(f"Captured: {capture_id} | Status: {capture.status} | Amount: USD {capture.amount.value}")
+
+except ErrorException as e:
+    print(f"Capture failed: {e.message}")
+    raise
+
+# ── 6. Issue partial refund ────────────────────────────────────────────────────
+print("Issuing partial refund of $25.00...")
+refund = client.payments_controller.refund_capture(
+    RefundCaptureInput(
+        capture_id=capture_id,
+        paypal_request_id=str(uuid.uuid4()),
+        body=RefundRequest(
+            amount=Money(value="25.00", currency_code="USD"),
+            note_to_payer="Partial refund — returned item",
+        ),
+    )
+)
+print(f"Refund {refund.body.id}: {refund.body.status} — USD {refund.body.amount.value}")
+print("\nDone! All sandbox transactions complete.")
+```
+
+---
+
+## cURL Reference
+
+If you prefer command-line testing without Python, here are the equivalent cURL commands:
+
+```bash
+# 1. Get access token
+curl -X POST https://api-m.sandbox.paypal.com/v1/oauth2/token \
+  -u "CLIENT_ID:CLIENT_SECRET" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials"
+
+# 2. Create order
+curl -X POST https://api-m.sandbox.paypal.com/v2/checkout/orders \
+  -H "Authorization: Bearer ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "PayPal-Request-Id: $(uuidgen)" \
+  -d '{
+    "intent": "CAPTURE",
+    "purchase_units": [{"amount": {"currency_code": "USD", "value": "50.00"}}]
+  }'
+
+# 3. Capture order (after buyer approval)
+curl -X POST https://api-m.sandbox.paypal.com/v2/checkout/orders/ORDER_ID/capture \
+  -H "Authorization: Bearer ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "PayPal-Request-Id: $(uuidgen)"
+
+# 4. Partial refund
+curl -X POST https://api-m.sandbox.paypal.com/v2/payments/captures/CAPTURE_ID/refund \
+  -H "Authorization: Bearer ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "PayPal-Request-Id: $(uuidgen)" \
+  -d '{"amount": {"value": "25.00", "currency_code": "USD"}, "note_to_payer": "Partial refund"}'
+```
+
+---
+
+## Going Live
+
+When you're ready to process real payments:
+
+1. In the Developer Dashboard, switch to **Live** under My Apps & Credentials
+2. Create a Live app and copy your **Live Client ID** and **Client Secret**
+3. Change `Environment.SANDBOX` to `Environment.PRODUCTION` in your client config
+4. Replace sandbox credentials with live credentials in your environment variables
+5. Change the base URL from `api-m.sandbox.paypal.com` to `api-m.paypal.com`
+
+No other code changes are needed.
+
+---
+
+## Next Steps
+
+- **[OpenAPI Specification →](./paypal-openapi)** — Full endpoint reference with all request/response schemas
+- **[Postman Collection →](./paypal-postman)** — Import and run all requests interactively
+- **[Webhook Integration →](./paypal-webhooks)** — Listen for real-time payment events
+- **[Error Reference →](./paypal-errors)** — All PayPal error codes and how to handle them
+- **[PayPal REST API Reference →](https://developer.paypal.com/api/rest/)** — Official documentation

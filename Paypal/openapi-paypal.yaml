@@ -1,0 +1,862 @@
+openapi: 3.0.3
+info:
+  title: PayPal Orders & Payments API
+  version: "v2"
+  description: |
+    This OpenAPI specification documents PayPal's Orders API (v2) and Payments
+    API for core payment workflows: OAuth 2.0 authentication, creating orders,
+    capturing payments, issuing refunds, and registering webhooks.
+
+    All examples use PayPal's **free sandbox environment** — no real money is
+    ever processed.
+
+    ## Sandbox vs Live Base URLs
+
+    | Environment | Base URL                          |
+    |-------------|-----------------------------------|
+    | Sandbox     | https://api-m.sandbox.paypal.com  |
+    | Live        | https://api-m.paypal.com          |
+
+    Switch environments by changing the base URL and your credentials —
+    no code changes needed.
+
+    ## Getting Free Sandbox Credentials (Step by Step)
+
+    ### Step 1 — Create a free developer account
+    Go to https://developer.paypal.com and sign in with any existing PayPal
+    account, or create one free. No credit card required.
+
+    ### Step 2 — Create a sandbox app
+    1. In the Developer Dashboard, go to **My Apps & Credentials**
+    2. Under **REST API apps**, click **Create App**
+    3. Name your app (e.g. "My Portfolio Test") and click **Create App**
+    4. Copy your **Client ID** and **Client Secret** for the sandbox
+
+    ### Step 3 — Note your sandbox accounts
+    Go to **Testing Tools → Sandbox Accounts**. PayPal provides:
+    - A **personal (buyer)** sandbox account — to simulate a customer paying
+    - A **business (seller)** sandbox account — your merchant account
+
+    ### Step 4 — Get an access token (Step 1 of every API workflow)
+    ```bash
+    curl -X POST https://api-m.sandbox.paypal.com/v1/oauth2/token \
+      -u "CLIENT_ID:CLIENT_SECRET" \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      -d "grant_type=client_credentials"
+    ```
+    Response:
+    ```json
+    {
+      "access_token": "A21AAxxxxxxxxxxxxxxxxxxxxxx",
+      "token_type": "Bearer",
+      "expires_in": 32400
+    }
+    ```
+    Use this token in the `Authorization: Bearer <token>` header for all
+    subsequent API calls. Tokens expire after ~9 hours; request a new one
+    with the same call.
+
+    ## End-to-End Workflow: Create and Capture an Order
+
+    ### Step 1 — Get an access token
+    (See above)
+
+    ### Step 2 — Create an order
+    ```bash
+    curl -X POST https://api-m.sandbox.paypal.com/v2/checkout/orders \
+      -H "Authorization: Bearer ACCESS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "intent": "CAPTURE",
+        "purchase_units": [{
+          "amount": {
+            "currency_code": "USD",
+            "value": "50.00"
+          },
+          "description": "Order #1042"
+        }]
+      }'
+    ```
+
+    ### Step 3 — Buyer approves the order
+    Redirect the buyer to the `approve` link returned in the response:
+    ```
+    https://www.sandbox.paypal.com/checkoutnow?token=ORDER_ID
+    ```
+    In sandbox, log in with your personal sandbox account credentials to
+    approve the payment.
+
+    ### Step 4 — Capture the payment
+    After the buyer approves, capture the funds:
+    ```bash
+    curl -X POST https://api-m.sandbox.paypal.com/v2/checkout/orders/ORDER_ID/capture \
+      -H "Authorization: Bearer ACCESS_TOKEN" \
+      -H "Content-Type: application/json"
+    ```
+    A `status` of `COMPLETED` means funds were captured successfully.
+
+    ### Step 5 — Verify the capture
+    ```bash
+    curl https://api-m.sandbox.paypal.com/v2/checkout/orders/ORDER_ID \
+      -H "Authorization: Bearer ACCESS_TOKEN"
+    ```
+
+    ## Python SDK
+
+    Install the official PayPal Server SDK:
+    ```bash
+    pip install paypalserversdk
+    ```
+
+  contact:
+    name: PayPal Developer Support
+    url: https://developer.paypal.com/support/
+  license:
+    name: PayPal Developer Agreement
+    url: https://www.paypal.com/us/webapps/mpp/ua/legalhub-full
+  externalDocs:
+    description: PayPal REST API Reference
+    url: https://developer.paypal.com/api/rest/
+
+servers:
+  - url: https://api-m.sandbox.paypal.com
+    description: Sandbox (free test environment)
+  - url: https://api-m.paypal.com
+    description: Live (production)
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Authentication
+    description: Obtain OAuth 2.0 access tokens
+  - name: Orders
+    description: Create, approve, capture, and retrieve orders (v2)
+  - name: Payments
+    description: Retrieve and refund captured payments
+  - name: Webhooks
+    description: Register endpoints for real-time event notifications
+
+paths:
+
+  /v1/oauth2/token:
+    post:
+      tags: [Authentication]
+      summary: Get an access token
+      description: |
+        Exchanges your client credentials for a Bearer access token. This token
+        must be included in every subsequent API call.
+
+        **Authentication:** Pass `client_id:client_secret` as HTTP Basic Auth.
+
+        **Steps:**
+        1. Base64-encode `CLIENT_ID:CLIENT_SECRET` (cURL's `-u` flag does this automatically)
+        2. POST to this endpoint with `grant_type=client_credentials`
+        3. Store the returned `access_token` — it expires after `expires_in` seconds (~9 hours)
+        4. When the token expires, repeat this call to get a fresh one
+
+        **cURL example:**
+        ```bash
+        curl -X POST https://api-m.sandbox.paypal.com/v1/oauth2/token \
+          -u "CLIENT_ID:CLIENT_SECRET" \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          -d "grant_type=client_credentials"
+        ```
+
+        **Python SDK example:**
+        ```python
+        from paypalserversdk.paypal_serversdk_client import PaypalServersdkClient
+        from paypalserversdk.configuration import Environment
+        from paypalserversdk.http.auth.o_auth_2 import ClientCredentialsAuthCredentials
+
+        client = PaypalServersdkClient(
+            client_credentials_auth_credentials=ClientCredentialsAuthCredentials(
+                o_auth_client_id="CLIENT_ID",
+                o_auth_client_secret="CLIENT_SECRET"
+            ),
+            environment=Environment.SANDBOX
+        )
+        # The SDK handles token retrieval and refresh automatically.
+        ```
+      operationId: getAccessToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [grant_type]
+              properties:
+                grant_type:
+                  type: string
+                  enum: [client_credentials]
+            example:
+              grant_type: client_credentials
+      responses:
+        '200':
+          description: Access token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessToken'
+              example:
+                access_token: A21AAxxxxxxxxxxxxxxxxxxxxxx
+                token_type: Bearer
+                app_id: APP-80W284485P519543T
+                expires_in: 32400
+                nonce: "2024-03-10T14:30:00ZR4ndOmNOnce"
+                scope: "https://uri.paypal.com/services/invoicing openid"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v2/checkout/orders:
+    post:
+      tags: [Orders]
+      summary: Create an order
+      description: |
+        Creates a PayPal order representing a payment intent. The order starts
+        in `CREATED` status and moves through approval to capture.
+
+        **Order lifecycle:**
+        `CREATED` → (buyer approves) → `APPROVED` → (you capture) → `COMPLETED`
+
+        **Intent values:**
+        - `CAPTURE` — capture payment immediately after buyer approval (most common)
+        - `AUTHORIZE` — authorize only; capture later with a separate call
+
+        **Step-by-step:**
+        1. Create the order with `intent`, `purchase_units`, and `amount`
+        2. Extract the `approve` link from the `links` array in the response
+        3. Redirect the buyer to that URL to approve payment in PayPal
+        4. After approval, capture the order (see `POST /v2/checkout/orders/{id}/capture`)
+
+        **Idempotency:** Include a `PayPal-Request-Id` header with a unique UUID
+        to safely retry failed requests without creating duplicate orders.
+
+        **Python SDK example:**
+        ```python
+        from paypalserversdk.models.create_order_request import CreateOrderRequest
+        from paypalserversdk.models.order_request import OrderRequest
+        from paypalserversdk.models.checkout_payment_intent import CheckoutPaymentIntent
+        from paypalserversdk.models.purchase_unit_request import PurchaseUnitRequest
+        from paypalserversdk.models.amount_with_breakdown import AmountWithBreakdown
+
+        order = client.orders_controller.create_order(
+            CreateOrderRequest(
+                body=OrderRequest(
+                    intent=CheckoutPaymentIntent.CAPTURE,
+                    purchase_units=[
+                        PurchaseUnitRequest(
+                            amount=AmountWithBreakdown(
+                                currency_code="USD",
+                                value="50.00"
+                            ),
+                            description="Order #1042"
+                        )
+                    ]
+                )
+            )
+        )
+        print(order.body.id)      # Order ID: e.g. 5O190127TN364715T
+        print(order.body.status)  # CREATED
+        ```
+      operationId: createOrder
+      parameters:
+        - name: PayPal-Request-Id
+          in: header
+          description: Unique client-generated UUID for idempotency
+          schema:
+            type: string
+            format: uuid
+          example: "7b92603e-77ed-4896-8e78-5dea2050476a"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+            example:
+              intent: CAPTURE
+              purchase_units:
+                - amount:
+                    currency_code: USD
+                    value: "50.00"
+                  description: "Order #1042"
+                  reference_id: order_ref_1042
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              example:
+                id: 5O190127TN364715T
+                status: CREATED
+                links:
+                  - href: "https://api-m.sandbox.paypal.com/v2/checkout/orders/5O190127TN364715T"
+                    rel: self
+                    method: GET
+                  - href: "https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T"
+                    rel: approve
+                    method: GET
+                  - href: "https://api-m.sandbox.paypal.com/v2/checkout/orders/5O190127TN364715T/capture"
+                    rel: capture
+                    method: POST
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v2/checkout/orders/{orderId}:
+    get:
+      tags: [Orders]
+      summary: Get order details
+      description: Retrieves the full details of an order, including its current status and purchase units.
+      operationId: getOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 5O190127TN364715T
+      responses:
+        '200':
+          description: Order object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v2/checkout/orders/{orderId}/capture:
+    post:
+      tags: [Orders]
+      summary: Capture payment for an order
+      description: |
+        Captures payment for an order that has been approved by the buyer.
+        This finalises the transaction and moves funds.
+
+        **Pre-conditions:**
+        - The order must be in `APPROVED` status (buyer has completed PayPal checkout)
+        - The order intent must be `CAPTURE`
+
+        **Steps:**
+        1. Confirm the buyer has approved the order (status = `APPROVED`)
+        2. POST to this endpoint — no request body required
+        3. Check `status` in the response — `COMPLETED` means funds captured
+        4. Store the `capture_id` from `purchase_units[0].payments.captures[0].id`
+           for future refunds
+
+        **cURL example:**
+        ```bash
+        curl -X POST \
+          https://api-m.sandbox.paypal.com/v2/checkout/orders/5O190127TN364715T/capture \
+          -H "Authorization: Bearer ACCESS_TOKEN" \
+          -H "Content-Type: application/json"
+        ```
+
+        **Python SDK example:**
+        ```python
+        capture = client.orders_controller.capture_order(
+            order_id="5O190127TN364715T"
+        )
+        captures = capture.body.purchase_units[0].payments.captures
+        capture_id = captures[0].id
+        print(f"Captured: {capture_id}, Status: {captures[0].status}")
+        # Captured: 3C679366HH908993F, Status: COMPLETED
+        ```
+      operationId: captureOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 5O190127TN364715T
+        - name: PayPal-Request-Id
+          in: header
+          description: Unique UUID for idempotent capture retries
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Optional — leave empty for standard capture
+      responses:
+        '201':
+          description: Order captured successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapturedOrder'
+              example:
+                id: 5O190127TN364715T
+                status: COMPLETED
+                purchase_units:
+                  - reference_id: order_ref_1042
+                    payments:
+                      captures:
+                        - id: 3C679366HH908993F
+                          status: COMPLETED
+                          amount:
+                            currency_code: USD
+                            value: "50.00"
+                          create_time: "2024-03-10T14:30:00Z"
+                          update_time: "2024-03-10T14:30:01Z"
+        '422':
+          description: Order not in APPROVED status — cannot capture
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayPalError'
+
+  /v2/payments/captures/{captureId}/refund:
+    post:
+      tags: [Payments]
+      summary: Refund a captured payment
+      description: |
+        Issues a full or partial refund for a captured payment.
+
+        **Steps:**
+        1. Retrieve the `capture_id` from the order capture response
+           (`purchase_units[0].payments.captures[0].id`)
+        2. POST to this endpoint with an optional `amount` for partial refunds
+        3. Omit `amount` to refund the full captured amount
+        4. A `status` of `COMPLETED` confirms the refund was processed
+
+        **cURL example (partial refund):**
+        ```bash
+        curl -X POST \
+          https://api-m.sandbox.paypal.com/v2/payments/captures/3C679366HH908993F/refund \
+          -H "Authorization: Bearer ACCESS_TOKEN" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "amount": {
+              "value": "25.00",
+              "currency_code": "USD"
+            },
+            "note_to_payer": "Partial refund for returned item"
+          }'
+        ```
+
+        **Python SDK example:**
+        ```python
+        from paypalserversdk.models.refund_capture_input import RefundCaptureInput
+        from paypalserversdk.models.refund_request import RefundRequest
+        from paypalserversdk.models.money import Money
+
+        refund = client.payments_controller.refund_capture(
+            RefundCaptureInput(
+                capture_id="3C679366HH908993F",
+                body=RefundRequest(
+                    amount=Money(
+                        value="25.00",
+                        currency_code="USD"
+                    ),
+                    note_to_payer="Partial refund for returned item"
+                )
+            )
+        )
+        print(refund.body.status)  # COMPLETED
+        ```
+      operationId: refundCapture
+      parameters:
+        - name: captureId
+          in: path
+          required: true
+          description: The capture ID from the order capture response
+          schema:
+            type: string
+          example: 3C679366HH908993F
+        - name: PayPal-Request-Id
+          in: header
+          description: Unique UUID for idempotent refund retries
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundRequest'
+            example:
+              amount:
+                value: "25.00"
+                currency_code: USD
+              note_to_payer: "Partial refund for returned item"
+      responses:
+        '201':
+          description: Refund processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refund'
+              example:
+                id: 1JU08902781691411
+                status: COMPLETED
+                amount:
+                  value: "25.00"
+                  currency_code: USD
+                note_to_payer: "Partial refund for returned item"
+                create_time: "2024-03-10T15:00:00Z"
+                links:
+                  - href: "https://api-m.sandbox.paypal.com/v2/payments/refunds/1JU08902781691411"
+                    rel: self
+                    method: GET
+        '422':
+          description: Capture not eligible for refund
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayPalError'
+
+  /v1/notifications/webhooks:
+    post:
+      tags: [Webhooks]
+      summary: Create a webhook
+      description: |
+        Registers a URL to receive real-time PayPal event notifications.
+
+        **Common event types for payment workflows:**
+        - `PAYMENT.CAPTURE.COMPLETED` — funds captured successfully
+        - `PAYMENT.CAPTURE.DENIED` — capture failed
+        - `PAYMENT.CAPTURE.REFUNDED` — refund issued
+        - `CHECKOUT.ORDER.APPROVED` — buyer approved the order
+        - `CHECKOUT.ORDER.COMPLETED` — full order lifecycle complete
+
+        **Verifying webhook signatures in Python:**
+        ```python
+        import paypalrestsdk
+
+        # Verify the webhook event is genuinely from PayPal
+        verified = paypalrestsdk.WebhookEvent.verify(
+            transmission_id=request.headers.get("Paypal-Transmission-Id"),
+            timestamp=request.headers.get("Paypal-Transmission-Time"),
+            webhook_id="WH-XXXXXXXXXXXXXXXXX",
+            event_body=request.data.decode("utf-8"),
+            cert_url=request.headers.get("Paypal-Cert-Url"),
+            actual_sig=request.headers.get("Paypal-Transmission-Sig"),
+            auth_algo=request.headers.get("Paypal-Auth-Algo")
+        )
+        if not verified:
+            return "Invalid signature", 400
+        ```
+
+        **Webhook headers PayPal sends with every event:**
+        - `Paypal-Transmission-Id` — unique ID for this delivery
+        - `Paypal-Transmission-Time` — ISO 8601 timestamp
+        - `Paypal-Transmission-Sig` — HMAC-SHA256 signature
+        - `Paypal-Cert-Url` — URL of PayPal's signing certificate
+        - `Paypal-Auth-Algo` — signature algorithm used
+      operationId: createWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWebhookRequest'
+            example:
+              url: "https://yourapp.com/webhooks/paypal"
+              event_types:
+                - name: PAYMENT.CAPTURE.COMPLETED
+                - name: PAYMENT.CAPTURE.REFUNDED
+                - name: CHECKOUT.ORDER.APPROVED
+      responses:
+        '201':
+          description: Webhook created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+              example:
+                id: WH-2WR32451HC0233532-67976317FL4543714
+                url: "https://yourapp.com/webhooks/paypal"
+                event_types:
+                  - name: PAYMENT.CAPTURE.COMPLETED
+                    description: A payment capture is completed.
+                  - name: PAYMENT.CAPTURE.REFUNDED
+                    description: A payment capture is refunded.
+                links:
+                  - href: "https://api-m.sandbox.paypal.com/v1/notifications/webhooks/WH-2WR32451HC0233532-67976317FL4543714"
+                    rel: self
+                    method: GET
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        OAuth 2.0 Bearer token obtained from `POST /v1/oauth2/token`.
+        Tokens expire after ~9 hours. Request a new token using client credentials.
+
+  schemas:
+    AccessToken:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: Bearer token to include in all API requests
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_in:
+          type: integer
+          description: Token lifetime in seconds (~32400 = 9 hours)
+        app_id:
+          type: string
+        scope:
+          type: string
+
+    Money:
+      type: object
+      required: [currency_code, value]
+      properties:
+        currency_code:
+          type: string
+          description: Three-letter ISO 4217 currency code
+          example: USD
+        value:
+          type: string
+          description: Decimal amount as a string (e.g. "50.00")
+          example: "50.00"
+
+    CreateOrderRequest:
+      type: object
+      required: [intent, purchase_units]
+      properties:
+        intent:
+          type: string
+          enum: [CAPTURE, AUTHORIZE]
+          description: CAPTURE to collect payment on approval; AUTHORIZE to hold funds for later capture
+        purchase_units:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/PurchaseUnit'
+
+    PurchaseUnit:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          $ref: '#/components/schemas/Money'
+        description:
+          type: string
+          maxLength: 127
+        reference_id:
+          type: string
+          description: Your internal reference for this purchase unit
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          description: PayPal order ID
+          example: 5O190127TN364715T
+        status:
+          type: string
+          enum: [CREATED, SAVED, APPROVED, VOIDED, COMPLETED, PAYER_ACTION_REQUIRED]
+        purchase_units:
+          type: array
+          items:
+            $ref: '#/components/schemas/PurchaseUnit'
+        create_time:
+          type: string
+          format: date-time
+        links:
+          type: array
+          description: HATEOAS links for next available actions
+          items:
+            $ref: '#/components/schemas/Link'
+
+    CapturedOrder:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [COMPLETED, VOIDED, PAYER_ACTION_REQUIRED]
+        purchase_units:
+          type: array
+          items:
+            type: object
+            properties:
+              reference_id:
+                type: string
+              payments:
+                type: object
+                properties:
+                  captures:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Capture'
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+
+    Capture:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Capture ID — required for refunds
+          example: 3C679366HH908993F
+        status:
+          type: string
+          enum: [COMPLETED, DECLINED, PARTIALLY_REFUNDED, PENDING, REFUNDED, FAILED]
+        amount:
+          $ref: '#/components/schemas/Money'
+        create_time:
+          type: string
+          format: date-time
+        update_time:
+          type: string
+          format: date-time
+
+    RefundRequest:
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/Money'
+          description: Omit to refund the full captured amount
+        note_to_payer:
+          type: string
+          maxLength: 255
+          description: Message shown to the buyer in their PayPal account
+
+    Refund:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1JU08902781691411
+        status:
+          type: string
+          enum: [CANCELLED, FAILED, PENDING, COMPLETED]
+        amount:
+          $ref: '#/components/schemas/Money'
+        note_to_payer:
+          type: string
+        create_time:
+          type: string
+          format: date-time
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+
+    CreateWebhookRequest:
+      type: object
+      required: [url, event_types]
+      properties:
+        url:
+          type: string
+          format: uri
+          description: HTTPS URL to receive webhook events
+        event_types:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: Event type name (e.g. PAYMENT.CAPTURE.COMPLETED)
+
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+          example: WH-2WR32451HC0233532-67976317FL4543714
+        url:
+          type: string
+        event_types:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+
+    Link:
+      type: object
+      description: HATEOAS hypermedia link
+      properties:
+        href:
+          type: string
+        rel:
+          type: string
+          description: Relationship (e.g. self, approve, capture, refund)
+        method:
+          type: string
+          enum: [GET, POST, PUT, PATCH, DELETE]
+
+    PayPalError:
+      type: object
+      properties:
+        name:
+          type: string
+          example: UNPROCESSABLE_ENTITY
+        message:
+          type: string
+          example: The requested action could not be performed.
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              issue:
+                type: string
+              description:
+                type: string
+        debug_id:
+          type: string
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PayPalError'
+    Unauthorized:
+      description: Authentication failed — invalid or missing access token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PayPalError'
+          example:
+            name: AUTHENTICATION_FAILURE
+            message: Authentication failed due to invalid authentication credentials.
+            debug_id: "12345abc67890"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PayPalError'
