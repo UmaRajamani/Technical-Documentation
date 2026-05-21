@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="paypal-overview">
+  <title>PayPal REST API Overview</title>
+  <shortdesc>The PayPal REST API enables developers to accept payments, manage orders, process
+    refunds, and handle subscriptions using a secure, standards-based integration.</shortdesc>
+  <conbody>
+
+    <p>PayPal's REST API uses OAuth 2.0 for authentication, JSON for request and response
+      bodies, and standard HTTP verbs. All requests must use HTTPS.</p>
+
+    <section id="capabilities">
+      <title>Key Capabilities</title>
+      <ul>
+        <li>Accept PayPal wallet payments and credit/debit cards</li>
+        <li>Create and capture payment orders (v2/orders)</li>
+        <li>Issue full and partial refunds</li>
+        <li>Manage recurring billing and subscriptions</li>
+        <li>Receive real-time event notifications via webhooks</li>
+        <li>Support for 200+ countries and 25+ currencies</li>
+      </ul>
+    </section>
+
+    <section id="conventions">
+      <title>API Conventions</title>
+      <table>
+        <title>PayPal REST API conventions</title>
+        <tgroup cols="2">
+          <colspec colname="convention" colwidth="1.2*"/>
+          <colspec colname="detail" colwidth="2.8*"/>
+          <thead>
+            <row><entry>Convention</entry><entry>Detail</entry></row>
+          </thead>
+          <tbody>
+            <row><entry>Base URL (Live)</entry>
+                 <entry><codeph>https://api-m.paypal.com</codeph></entry></row>
+            <row><entry>Base URL (Sandbox)</entry>
+                 <entry><codeph>https://api-m.sandbox.paypal.com</codeph></entry></row>
+            <row><entry>Authentication</entry>
+                 <entry>OAuth 2.0 client credentials — Bearer token in Authorization header</entry></row>
+            <row><entry>API Version</entry>
+                 <entry>v2 for Orders and Payments; v1 for legacy endpoints</entry></row>
+            <row><entry>Request format</entry>
+                 <entry><codeph>application/json</codeph></entry></row>
+            <row><entry>Currency amounts</entry>
+                 <entry>String with 2 decimal places — e.g., <codeph>"10.00"</codeph></entry></row>
+            <row><entry>Currency codes</entry>
+                 <entry>ISO 4217 — e.g., <codeph>USD</codeph>, <codeph>EUR</codeph>, <codeph>GBP</codeph></entry></row>
+            <row><entry>Idempotency</entry>
+                 <entry><codeph>PayPal-Request-Id</codeph> header for safe POST retries</entry></row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <section id="environments">
+      <title>Environments</title>
+      <p>PayPal provides two environments for development and production use.</p>
+      <table>
+        <title>PayPal API environments</title>
+        <tgroup cols="3">
+          <colspec colname="env" colwidth="1*"/>
+          <colspec colname="url" colwidth="2*"/>
+          <colspec colname="purpose" colwidth="2*"/>
+          <thead>
+            <row><entry>Environment</entry><entry>Base URL</entry><entry>Purpose</entry></row>
+          </thead>
+          <tbody>
+            <row>
+              <entry><b>Sandbox</b></entry>
+              <entry><codeph>https://api-m.sandbox.paypal.com</codeph></entry>
+              <entry>Development and testing — no real money</entry>
+            </row>
+            <row>
+              <entry><b>Live</b></entry>
+              <entry><codeph>https://api-m.paypal.com</codeph></entry>
+              <entry>Production payments with real funds</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <note type="note">
+      <p>Sandbox and live environments use separate credentials. Sandbox <codeph>client_id</codeph>
+        and <codeph>client_secret</codeph> cannot be used against the live endpoint.</p>
+    </note>
+
+  </conbody>
+</concept>

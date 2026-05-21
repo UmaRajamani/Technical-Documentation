@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="webhooks-concept">
+  <title>Webhooks Overview</title>
+  <shortdesc>PayPal webhooks deliver real-time event notifications to your server
+    when payment activities occur — eliminating the need to poll the API.</shortdesc>
+  <conbody>
+
+    <p>A webhook is an HTTPS POST request that PayPal sends to your endpoint URL
+      when a subscribed event occurs. Your endpoint must return HTTP <codeph>200</codeph>
+      within 10 seconds or PayPal will retry.</p>
+
+    <section id="event-types">
+      <title>Key Webhook Event Types</title>
+      <table>
+        <title>Common PayPal webhook events</title>
+        <tgroup cols="2">
+          <colspec colname="event" colwidth="2*"/>
+          <colspec colname="desc" colwidth="3*"/>
+          <thead>
+            <row><entry>Event Type</entry><entry>Description</entry></row>
+          </thead>
+          <tbody>
+            <row>
+              <entry><codeph>CHECKOUT.ORDER.APPROVED</codeph></entry>
+              <entry>Buyer approved the order — ready to capture</entry>
+            </row>
+            <row>
+              <entry><codeph>PAYMENT.CAPTURE.COMPLETED</codeph></entry>
+              <entry>Capture succeeded — funds collected</entry>
+            </row>
+            <row>
+              <entry><codeph>PAYMENT.CAPTURE.DENIED</codeph></entry>
+              <entry>Capture failed — buyer's payment declined</entry>
+            </row>
+            <row>
+              <entry><codeph>PAYMENT.CAPTURE.REFUNDED</codeph></entry>
+              <entry>Refund processed for a capture</entry>
+            </row>
+            <row>
+              <entry><codeph>PAYMENT.AUTHORIZATION.VOIDED</codeph></entry>
+              <entry>Authorization was voided before capture</entry>
+            </row>
+            <row>
+              <entry><codeph>CUSTOMER.DISPUTE.CREATED</codeph></entry>
+              <entry>Buyer opened a dispute or chargeback</entry>
+            </row>
+            <row>
+              <entry><codeph>BILLING.SUBSCRIPTION.ACTIVATED</codeph></entry>
+              <entry>Subscription became active</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <section id="webhook-payload">
+      <title>Webhook Payload Structure</title>
+      <p>All webhook events share the same envelope structure:</p>
+      <codeblock>{
+  "id": "WH-82F81145PK519990L-9BM123456789",
+  "event_version": "1.0",
+  "create_time": "2024-09-15T10:35:00Z",
+  "resource_type": "capture",
+  "event_type": "PAYMENT.CAPTURE.COMPLETED",
+  "summary": "Payment completed for $ 220.00 USD",
+  "resource": {
+    "id": "3C679366HH908993F",
+    "status": "COMPLETED",
+    "amount": {
+      "currency_code": "USD",
+      "value": "220.00"
+    }
+  },
+  "links": [
+    {
+      "href": "https://api-m.sandbox.paypal.com/v1/notifications/webhooks-events/WH-...",
+      "rel": "self",
+      "method": "GET"
+    }
+  ]
+}</codeblock>
+    </section>
+
+    <section id="signature-verification">
+      <title>Signature Verification</title>
+      <p>Always verify webhook signatures to ensure the event originates from PayPal.
+        Use the <codeph>PAYPAL-TRANSMISSION-ID</codeph>, <codeph>PAYPAL-CERT-URL</codeph>,
+        <codeph>PAYPAL-TRANSMISSION-SIG</codeph>, and <codeph>PAYPAL-TRANSMISSION-TIME</codeph>
+        headers with the PayPal SDK or the webhook verification API endpoint.</p>
+    </section>
+
+    <note type="warning">
+      <p>Never process a webhook event without first verifying the signature.
+        Unverified webhooks can be spoofed, leading to fraudulent order processing.</p>
+    </note>
+
+  </conbody>
+</concept>

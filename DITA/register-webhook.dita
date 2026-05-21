@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE task PUBLIC "-//OASIS//DTD DITA Task//EN" "task.dtd">
+<task id="register-webhook">
+  <title>Register a Webhook</title>
+  <shortdesc>Subscribe your HTTPS endpoint to receive real-time PayPal event
+    notifications.</shortdesc>
+  <taskbody>
+
+    <prereq>
+      <ul>
+        <li>A publicly accessible HTTPS endpoint (not localhost)</li>
+        <li>SSL/TLS certificate from a trusted Certificate Authority</li>
+        <li>A valid Bearer token with webhook management permissions</li>
+      </ul>
+    </prereq>
+
+    <steps>
+      <step>
+        <cmd>Send a POST request to create the webhook subscription.</cmd>
+        <info>
+          <codeblock>curl -X POST \
+  https://api-m.sandbox.paypal.com/v1/notifications/webhooks \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer A21AAFEpH4PsADbl..." \
+  -d '{
+    "url": "https://your-domain.com/paypal/webhook",
+    "event_types": [
+      { "name": "CHECKOUT.ORDER.APPROVED" },
+      { "name": "PAYMENT.CAPTURE.COMPLETED" },
+      { "name": "PAYMENT.CAPTURE.DENIED" },
+      { "name": "PAYMENT.CAPTURE.REFUNDED" },
+      { "name": "CUSTOMER.DISPUTE.CREATED" }
+    ]
+  }'</codeblock>
+        </info>
+      </step>
+
+      <step>
+        <cmd>Save the webhook <codeph>id</codeph> from the response.</cmd>
+        <info>
+          <codeblock>{
+  "id": "5TH26290RN9719702",
+  "url": "https://your-domain.com/paypal/webhook",
+  "event_types": [
+    { "name": "CHECKOUT.ORDER.APPROVED", "status": "ENABLED" },
+    { "name": "PAYMENT.CAPTURE.COMPLETED", "status": "ENABLED" }
+  ],
+  "links": [
+    {
+      "href": "https://api-m.sandbox.paypal.com/v1/notifications/webhooks/5TH26290RN9719702",
+      "rel": "self",
+      "method": "GET"
+    }
+  ]
+}</codeblock>
+        </info>
+        <stepresult>Store the webhook <codeph>id</codeph> — you will need it to
+          verify incoming event signatures.</stepresult>
+      </step>
+
+      <step>
+        <cmd>Implement signature verification in your webhook handler.</cmd>
+        <info>
+          <p>On each incoming webhook POST, verify the signature before processing:</p>
+          <codeblock>curl -X POST \
+  https://api-m.sandbox.paypal.com/v1/notifications/verify-webhook-signature \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer A21AAFEpH4PsADbl..." \
+  -d '{
+    "transmission_id":   "PAYPAL-TRANSMISSION-ID header value",
+    "transmission_time": "PAYPAL-TRANSMISSION-TIME header value",
+    "cert_url":          "PAYPAL-CERT-URL header value",
+    "auth_algo":         "PAYPAL-AUTH-ALGO header value",
+    "transmission_sig":  "PAYPAL-TRANSMISSION-SIG header value",
+    "webhook_id":        "5TH26290RN9719702",
+    "webhook_event":     { ... event body ... }
+  }'</codeblock>
+          <p>A response of <codeph>"verification_status": "SUCCESS"</codeph> confirms
+            the event is authentic.</p>
+        </info>
+      </step>
+
+      <step>
+        <cmd>Return HTTP <codeph>200 OK</codeph> from your endpoint after processing.</cmd>
+        <info>PayPal retries delivery up to 5 times with exponential backoff if
+          your endpoint returns a non-200 status or times out (10 second timeout).</info>
+      </step>
+    </steps>
+
+    <result>
+      <p>Your webhook is registered. PayPal will POST events to your URL whenever
+        subscribed events occur on your account.</p>
+    </result>
+
+    <note type="tip">
+      <p>Use the PayPal Developer Dashboard to send test webhook events to your
+        endpoint without completing a real transaction. Navigate to
+        <b>Webhooks → Simulate</b>.</p>
+    </note>
+
+  </taskbody>
+</task>

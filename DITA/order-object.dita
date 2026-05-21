@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="order-object">
+  <title>Order Object</title>
+  <shortdesc>Fields of the PayPal Order object returned by the v2/checkout/orders
+    endpoints.</shortdesc>
+  <refbody>
+
+    <section id="order-top-level">
+      <title>Top-Level Fields</title>
+      <properties>
+        <prophead>
+          <proptypehd>Field</proptypehd>
+          <propvaluehd>Type</propvaluehd>
+          <propdeschd>Description</propdeschd>
+        </prophead>
+        <property>
+          <proptype>id</proptype>
+          <propvalue>string</propvalue>
+          <propdesc>Unique order ID — PayPal-generated alphanumeric string
+            (e.g., <codeph>5O190127TN364715T</codeph>).</propdesc>
+        </property>
+        <property>
+          <proptype>intent</proptype>
+          <propvalue>enum</propvalue>
+          <propdesc><codeph>CAPTURE</codeph> or <codeph>AUTHORIZE</codeph>.
+            Set at order creation.</propdesc>
+        </property>
+        <property>
+          <proptype>status</proptype>
+          <propvalue>enum</propvalue>
+          <propdesc><codeph>CREATED</codeph> · <codeph>SAVED</codeph> ·
+            <codeph>APPROVED</codeph> · <codeph>VOIDED</codeph> ·
+            <codeph>COMPLETED</codeph> · <codeph>PAYER_ACTION_REQUIRED</codeph></propdesc>
+        </property>
+        <property>
+          <proptype>purchase_units</proptype>
+          <propvalue>array</propvalue>
+          <propdesc>Array of purchase unit objects. Each represents a payment to
+            one payee. Required at creation.</propdesc>
+        </property>
+        <property>
+          <proptype>payer</proptype>
+          <propvalue>object</propvalue>
+          <propdesc>Buyer information — populated after buyer approval. Includes
+            name, email, and payer ID.</propdesc>
+        </property>
+        <property>
+          <proptype>application_context</proptype>
+          <propvalue>object</propvalue>
+          <propdesc>Customizes buyer experience: brand name, landing page,
+            return/cancel URLs, shipping preference.</propdesc>
+        </property>
+        <property>
+          <proptype>create_time</proptype>
+          <propvalue>string</propvalue>
+          <propdesc>ISO 8601 UTC timestamp of order creation.</propdesc>
+        </property>
+        <property>
+          <proptype>update_time</proptype>
+          <propvalue>string</propvalue>
+          <propdesc>ISO 8601 UTC timestamp of last order update.</propdesc>
+        </property>
+        <property>
+          <proptype>links</proptype>
+          <propvalue>array</propvalue>
+          <propdesc>HATEOAS links — self, approve, capture, authorize actions
+            relevant to the current order state.</propdesc>
+        </property>
+      </properties>
+    </section>
+
+    <section id="purchase-unit-fields">
+      <title>Purchase Unit Fields</title>
+      <properties>
+        <prophead>
+          <proptypehd>Field</proptypehd>
+          <propvaluehd>Type</propvaluehd>
+          <propdeschd>Description</propdeschd>
+        </prophead>
+        <property>
+          <proptype>reference_id</proptype>
+          <propvalue>string</propvalue>
+          <propdesc>Your internal reference for this purchase unit (max 256 chars).</propdesc>
+        </property>
+        <property>
+          <proptype>amount</proptype>
+          <propvalue>object</propvalue>
+          <propdesc>Total amount with <codeph>currency_code</codeph> (ISO 4217) and
+            <codeph>value</codeph> (string, 2 decimal places).</propdesc>
+        </property>
+        <property>
+          <proptype>description</proptype>
+          <propvalue>string</propvalue>
+          <propdesc>Optional description shown to the buyer (max 127 chars).</propdesc>
+        </property>
+        <property>
+          <proptype>items</proptype>
+          <propvalue>array</propvalue>
+          <propdesc>Line items — name, unit_amount, quantity, category, SKU.</propdesc>
+        </property>
+        <property>
+          <proptype>shipping</proptype>
+          <propvalue>object</propvalue>
+          <propdesc>Shipping address and method for physical goods.</propdesc>
+        </property>
+        <property>
+          <proptype>payments</proptype>
+          <propvalue>object</propvalue>
+          <propdesc>Contains <codeph>captures</codeph> and/or
+            <codeph>authorizations</codeph> arrays — populated after payment.</propdesc>
+        </property>
+      </properties>
+    </section>
+
+    <section id="order-endpoints">
+      <title>Related Endpoints</title>
+      <ul>
+        <li><codeph>POST /v2/checkout/orders</codeph> — Create order</li>
+        <li><codeph>GET /v2/checkout/orders/{id}</codeph> — Get order details</li>
+        <li><codeph>PATCH /v2/checkout/orders/{id}</codeph> — Update order (before approval)</li>
+        <li><codeph>POST /v2/checkout/orders/{id}/capture</codeph> — Capture approved order</li>
+        <li><codeph>POST /v2/checkout/orders/{id}/authorize</codeph> — Authorize approved order</li>
+      </ul>
+    </section>
+
+  </refbody>
+</reference>

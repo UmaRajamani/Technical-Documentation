@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE task PUBLIC "-//OASIS//DTD DITA Task//EN" "task.dtd">
+<task id="refund-payment">
+  <title>Refund a Payment</title>
+  <shortdesc>Return funds to a buyer for a completed PayPal capture — full or partial.</shortdesc>
+  <taskbody>
+
+    <prereq>
+      <ul>
+        <li>A completed capture with status <codeph>COMPLETED</codeph></li>
+        <li>The capture <codeph>id</codeph> (e.g., <codeph>3C679366HH908993F</codeph>)</li>
+        <li>Refund amount ≤ original captured amount</li>
+        <li>Transaction within 180 days of capture date</li>
+      </ul>
+    </prereq>
+
+    <steps>
+      <step>
+        <cmd>Send a POST request to the refund endpoint with the capture ID.</cmd>
+        <info>
+          <p>For a <b>full refund</b>, omit the <codeph>amount</codeph> field:</p>
+          <codeblock>curl -X POST \
+  https://api-m.sandbox.paypal.com/v2/payments/captures/3C679366HH908993F/refund \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer A21AAFEpH4PsADbl..." \
+  -H "PayPal-Request-Id: refund-20240915-001" \
+  -d '{
+    "note_to_payer": "Refund for order cancellation"
+  }'</codeblock>
+          <p>For a <b>partial refund</b>, include the amount:</p>
+          <codeblock>curl -X POST \
+  https://api-m.sandbox.paypal.com/v2/payments/captures/3C679366HH908993F/refund \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer A21AAFEpH4PsADbl..." \
+  -H "PayPal-Request-Id: refund-partial-001" \
+  -d '{
+    "amount": {
+      "currency_code": "USD",
+      "value": "20.00"
+    },
+    "invoice_id": "REFUND-INV-001",
+    "note_to_payer": "Partial refund for returned item"
+  }'</codeblock>
+        </info>
+      </step>
+
+      <step>
+        <cmd>Check the response for <codeph>"status": "COMPLETED"</codeph>.</cmd>
+        <info>
+          <codeblock>{
+  "id": "1JU08902781691046",
+  "status": "COMPLETED",
+  "amount": {
+    "currency_code": "USD",
+    "value": "20.00"
+  },
+  "seller_payable_breakdown": {
+    "gross_amount": {
+      "currency_code": "USD",
+      "value": "20.00"
+    },
+    "paypal_fee": {
+      "currency_code": "USD",
+      "value": "0.00"
+    },
+    "net_amount": {
+      "currency_code": "USD",
+      "value": "20.00"
+    },
+    "total_refunded_amount": {
+      "currency_code": "USD",
+      "value": "20.00"
+    }
+  },
+  "note": "Partial refund for returned item",
+  "create_time": "2024-09-15T11:00:00Z"
+}</codeblock>
+        </info>
+        <stepresult>Refund initiated. The buyer receives funds within the timeline
+          for their funding source.</stepresult>
+      </step>
+    </steps>
+
+    <result>
+      <p>The refund is complete. PayPal sends the buyer an email confirmation.
+        Refund processing times vary by the buyer's funding source.</p>
+    </result>
+
+    <note type="note">
+      <p>The PayPal fee from the original transaction is returned to you when
+        you issue a full refund. Partial refunds do not return the fee proportionally.</p>
+    </note>
+
+  </taskbody>
+</task>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<val>
+  <!-- developer-sandbox.ditaval -->
+  <!-- Builds the sandbox onboarding guide for developers -->
+  <prop att="audience" val="developer"  action="include"/>
+  <prop att="audience" val="merchant"   action="exclude"/>
+  <prop att="platform" val="sandbox"    action="include"/>
+  <prop att="platform" val="live"       action="exclude"/>
+</val>

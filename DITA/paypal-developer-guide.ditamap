@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map title="PayPal REST API Developer Guide">
+
+  <!-- Key definitions -->
+  <keydef keys="product-name">
+    <topicmeta><linktext>PayPal</linktext></topicmeta>
+  </keydef>
+  <keydef keys="api-base-url">
+    <topicmeta><linktext>https://api-m.paypal.com</linktext></topicmeta>
+  </keydef>
+  <keydef keys="sandbox-url">
+    <topicmeta><linktext>https://api-m.sandbox.paypal.com</linktext></topicmeta>
+  </keydef>
+  <keydef keys="support-email">
+    <topicmeta><linktext>developer-support@paypal.com</linktext></topicmeta>
+  </keydef>
+  <keydef keys="api-version">
+    <topicmeta><linktext>v2</linktext></topicmeta>
+  </keydef>
+  <keydef keys="sdk-docs" href="https://developer.paypal.com/sdk/js/">
+    <topicmeta><linktext>PayPal JS SDK</linktext></topicmeta>
+  </keydef>
+
+  <!-- Chapter 1: Getting Started -->
+  <topicref href="getting-started/overview.dita" navtitle="Overview">
+    <topicref href="getting-started/quickstart.dita"/>
+    <topicref href="getting-started/authenticate.dita"/>
+    <topicref href="getting-started/sandbox-testing.dita"/>
+  </topicref>
+
+  <!-- Chapter 2: Orders -->
+  <topicref href="orders/orders-concept.dita">
+    <topicref href="orders/create-order.dita"/>
+    <topicref href="orders/capture-order.dita"/>
+  </topicref>
+
+  <!-- Chapter 3: Payments -->
+  <topicref href="payments/payments-concept.dita">
+    <topicref href="payments/create-payment.dita"/>
+    <topicref href="payments/refund-payment.dita"/>
+  </topicref>
+
+  <!-- Chapter 4: Webhooks -->
+  <topicref href="webhooks/webhooks-concept.dita">
+    <topicref href="webhooks/register-webhook.dita"/>
+  </topicref>
+
+  <!-- Chapter 5: Reference -->
+  <topicref href="reference/order-object.dita"/>
+  <topicref href="reference/payment-object.dita"/>
+  <topicref href="reference/error-codes.dita"/>
+
+  <!-- Reuse library (not in TOC) -->
+  <topicref href="reuse/reuse-library.dita"
+            processing-role="resource-only" toc="no"/>
+
+  <!-- Relationship table -->
+  <reltable>
+    <relheader>
+      <relcolspec type="concept"/>
+      <relcolspec type="task"/>
+      <relcolspec type="reference"/>
+    </relheader>
+    <relrow>
+      <relcell><topicref href="getting-started/overview.dita"/></relcell>
+      <relcell><topicref href="getting-started/quickstart.dita"/></relcell>
+      <relcell><topicref href="reference/error-codes.dita"/></relcell>
+    </relrow>
+    <relrow>
+      <relcell><topicref href="orders/orders-concept.dita"/></relcell>
+      <relcell><topicref href="orders/create-order.dita"/></relcell>
+      <relcell><topicref href="reference/order-object.dita"/></relcell>
+    </relrow>
+    <relrow>
+      <relcell><topicref href="payments/payments-concept.dita"/></relcell>
+      <relcell><topicref href="payments/create-payment.dita"/></relcell>
+      <relcell><topicref href="reference/payment-object.dita"/></relcell>
+    </relrow>
+  </reltable>
+
+</map>

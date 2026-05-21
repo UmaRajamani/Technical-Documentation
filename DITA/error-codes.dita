@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="error-codes">
+  <title>Error Codes</title>
+  <shortdesc>HTTP status codes and PayPal error identifiers returned by the REST API,
+    with resolution guidance.</shortdesc>
+  <refbody>
+
+    <section id="error-structure">
+      <title>Error Response Structure</title>
+      <p>All PayPal API errors return a consistent JSON body:</p>
+      <codeblock>{
+  "name": "UNPROCESSABLE_ENTITY",
+  "message": "The requested action could not be performed.",
+  "debug_id": "c9a6c7d7f9fba",
+  "details": [
+    {
+      "field": "/purchase_units/@reference_id=='default'/amount/value",
+      "value": "-10.00",
+      "location": "body",
+      "issue": "INVALID_PARAMETER_VALUE",
+      "description": "The value of the field is invalid."
+    }
+  ],
+  "links": [
+    {
+      "href": "https://developer.paypal.com/api/rest/reference/orders/v2/errors/",
+      "rel": "information_link",
+      "method": "GET"
+    }
+  ]
+}</codeblock>
+    </section>
+
+    <section id="4xx-errors">
+      <title>4xx Client Errors</title>
+      <table>
+        <title>PayPal 4xx client error codes</title>
+        <tgroup cols="3">
+          <colspec colname="http" colwidth=".6*"/>
+          <colspec colname="name" colwidth="1.8*"/>
+          <colspec colname="resolution" colwidth="2.6*"/>
+          <thead>
+            <row><entry>HTTP</entry><entry>Error Name</entry><entry>Resolution</entry></row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>400</entry>
+              <entry><codeph>INVALID_REQUEST</codeph></entry>
+              <entry>Malformed JSON or missing required field. Check the request body.</entry>
+            </row>
+            <row>
+              <entry>400</entry>
+              <entry><codeph>INVALID_PARAMETER_VALUE</codeph></entry>
+              <entry>Field value is out of allowed range or wrong format
+                (e.g., negative amount).</entry>
+            </row>
+            <row>
+              <entry>401</entry>
+              <entry><codeph>AUTHENTICATION_FAILURE</codeph></entry>
+              <entry>Invalid or expired access token. Refresh using
+                <codeph>POST /v1/oauth2/token</codeph>.</entry>
+            </row>
+            <row>
+              <entry>403</entry>
+              <entry><codeph>NOT_AUTHORIZED</codeph></entry>
+              <entry>The app does not have permission for this action.
+                Check your app's feature entitlements in the dashboard.</entry>
+            </row>
+            <row>
+              <entry>404</entry>
+              <entry><codeph>RESOURCE_NOT_FOUND</codeph></entry>
+              <entry>The order or capture ID does not exist or belongs
+                to a different environment (sandbox vs live).</entry>
+            </row>
+            <row>
+              <entry>409</entry>
+              <entry><codeph>DUPLICATE_REQUEST_ID</codeph></entry>
+              <entry><codeph>PayPal-Request-Id</codeph> reused with a different
+                body. Use a unique ID per logical operation.</entry>
+            </row>
+            <row>
+              <entry>422</entry>
+              <entry><codeph>UNPROCESSABLE_ENTITY</codeph></entry>
+              <entry>Business rule violation — e.g., capturing a non-approved order,
+                refunding more than captured amount.</entry>
+            </row>
+            <row>
+              <entry>422</entry>
+              <entry><codeph>ORDER_NOT_APPROVED</codeph></entry>
+              <entry>Cannot capture — buyer has not approved the order yet.</entry>
+            </row>
+            <row>
+              <entry>422</entry>
+              <entry><codeph>INSTRUMENT_DECLINED</codeph></entry>
+              <entry>Buyer's payment method declined. Prompt buyer to use
+                a different payment method.</entry>
+            </row>
+            <row>
+              <entry>429</entry>
+              <entry><codeph>RATE_LIMIT_REACHED</codeph></entry>
+              <entry>Too many requests. Implement exponential backoff.
+                Check <codeph>Retry-After</codeph> header.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <section id="5xx-errors">
+      <title>5xx Server Errors</title>
+      <table>
+        <title>PayPal 5xx server error codes</title>
+        <tgroup cols="3">
+          <colspec colname="http" colwidth=".6*"/>
+          <colspec colname="name" colwidth="1.8*"/>
+          <colspec colname="resolution" colwidth="2.6*"/>
+          <thead>
+            <row><entry>HTTP</entry><entry>Error Name</entry><entry>Resolution</entry></row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>500</entry>
+              <entry><codeph>INTERNAL_SERVER_ERROR</codeph></entry>
+              <entry>Unexpected PayPal error. Retry with exponential backoff.
+                Note the <codeph>debug_id</codeph> for support tickets.</entry>
+            </row>
+            <row>
+              <entry>503</entry>
+              <entry><codeph>SERVICE_UNAVAILABLE</codeph></entry>
+              <entry>PayPal is undergoing maintenance. Check
+                <xref href="https://www.paypaldeveloper.com/status"
+                      format="html" scope="external">PayPal Status</xref>.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <note type="tip">
+      <p>Always log the <codeph>debug_id</codeph> field from error responses. When
+        contacting PayPal Developer Support, include the <codeph>debug_id</codeph>
+        so engineers can trace the exact request in PayPal's systems.</p>
+    </note>
+
+  </refbody>
+</reference>

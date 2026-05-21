@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="payment-object">
+  <title>Payment Object</title>
+  <shortdesc>Fields of the PayPal Capture and Refund objects returned by the
+    v2/payments endpoints.</shortdesc>
+  <refbody>
+
+    <section id="capture-fields">
+      <title>Capture Object Fields</title>
+      <properties>
+        <prophead>
+          <proptypehd>Field</proptypehd>
+          <propvaluehd>Type</propvaluehd>
+          <propdeschd>Description</propdeschd>
+        </prophead>
+        <property>
+          <proptype>id</proptype>
+          <propvalue>string</propvalue>
+          <propdesc>Unique capture ID (e.g., <codeph>3C679366HH908993F</codeph>).
+            Use this ID to issue refunds.</propdesc>
+        </property>
+        <property>
+          <proptype>status</proptype>
+          <propvalue>enum</propvalue>
+          <propdesc><codeph>COMPLETED</codeph> · <codeph>DECLINED</codeph> ·
+            <codeph>PARTIALLY_REFUNDED</codeph> · <codeph>PENDING</codeph> ·
+            <codeph>REFUNDED</codeph></propdesc>
+        </property>
+        <property>
+          <proptype>amount</proptype>
+          <propvalue>object</propvalue>
+          <propdesc>Captured amount with <codeph>currency_code</codeph> and
+            <codeph>value</codeph>.</propdesc>
+        </property>
+        <property>
+          <proptype>final_capture</proptype>
+          <propvalue>boolean</propvalue>
+          <propdesc><codeph>true</codeph> if no further captures are allowed
+            on this authorization.</propdesc>
+        </property>
+        <property>
+          <proptype>seller_protection</proptype>
+          <propvalue>object</propvalue>
+          <propdesc>Seller Protection status: <codeph>ELIGIBLE</codeph>,
+            <codeph>PARTIALLY_ELIGIBLE</codeph>, or <codeph>NOT_ELIGIBLE</codeph>.
+            Includes dispute coverage categories.</propdesc>
+        </property>
+        <property>
+          <proptype>invoice_id</proptype>
+          <propvalue>string</propvalue>
+          <propdesc>Your invoice ID associated with this capture (max 127 chars).</propdesc>
+        </property>
+        <property>
+          <proptype>create_time</proptype>
+          <propvalue>string</propvalue>
+          <propdesc>ISO 8601 UTC timestamp of capture creation.</propdesc>
+        </property>
+        <property>
+          <proptype>update_time</proptype>
+          <propvalue>string</propvalue>
+          <propdesc>ISO 8601 UTC timestamp of last capture update.</propdesc>
+        </property>
+      </properties>
+    </section>
+
+    <section id="refund-fields">
+      <title>Refund Object Fields</title>
+      <properties>
+        <prophead>
+          <proptypehd>Field</proptypehd>
+          <propvaluehd>Type</propvaluehd>
+          <propdeschd>Description</propdeschd>
+        </prophead>
+        <property>
+          <proptype>id</proptype>
+          <propvalue>string</propvalue>
+          <propdesc>Unique refund ID (e.g., <codeph>1JU08902781691046</codeph>).</propdesc>
+        </property>
+        <property>
+          <proptype>status</proptype>
+          <propvalue>enum</propvalue>
+          <propdesc><codeph>CANCELLED</codeph> · <codeph>FAILED</codeph> ·
+            <codeph>PENDING</codeph> · <codeph>COMPLETED</codeph></propdesc>
+        </property>
+        <property>
+          <proptype>amount</proptype>
+          <propvalue>object</propvalue>
+          <propdesc>Refund amount with <codeph>currency_code</codeph> and
+            <codeph>value</codeph>.</propdesc>
+        </property>
+        <property>
+          <proptype>seller_payable_breakdown</proptype>
+          <propvalue>object</propvalue>
+          <propdesc>Breakdown of gross amount, PayPal fee returned, net amount
+            debited from your account, and total refunded.</propdesc>
+        </property>
+        <property>
+          <proptype>note</proptype>
+          <propvalue>string</propvalue>
+          <propdesc>Refund note shown to buyer (max 255 chars).</propdesc>
+        </property>
+        <property>
+          <proptype>invoice_id</proptype>
+          <propvalue>string</propvalue>
+          <propdesc>Invoice ID associated with the refund.</propdesc>
+        </property>
+      </properties>
+    </section>
+
+    <section id="payment-endpoints">
+      <title>Related Endpoints</title>
+      <ul>
+        <li><codeph>POST /v2/payments/authorizations/{id}/capture</codeph> — Capture authorization</li>
+        <li><codeph>GET /v2/payments/captures/{id}</codeph> — Get capture details</li>
+        <li><codeph>POST /v2/payments/captures/{id}/refund</codeph> — Refund capture</li>
+        <li><codeph>GET /v2/payments/refunds/{id}</codeph> — Get refund details</li>
+        <li><codeph>POST /v2/payments/authorizations/{id}/void</codeph> — Void authorization</li>
+      </ul>
+    </section>
+
+  </refbody>
+</reference>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="sandbox-testing">
+  <title>Sandbox Testing</title>
+  <shortdesc>The PayPal Sandbox is a self-contained test environment that mirrors the
+    live PayPal platform — no real money is ever moved.</shortdesc>
+  <conbody>
+
+    <p>Use the sandbox throughout development and QA. Sandbox accounts, credentials,
+      and transactions are completely isolated from live data.</p>
+
+    <section id="sandbox-accounts">
+      <title>Sandbox Account Types</title>
+      <table>
+        <title>Sandbox account types and their uses</title>
+        <tgroup cols="2">
+          <colspec colname="type" colwidth="1.2*"/>
+          <colspec colname="use" colwidth="2.8*"/>
+          <thead>
+            <row><entry>Account Type</entry><entry>Use</entry></row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>Business (Facilitator)</entry>
+              <entry>Receives payments — maps to your merchant PayPal account</entry>
+            </row>
+            <row>
+              <entry>Personal (Buyer)</entry>
+              <entry>Makes payments — used to simulate buyer checkout flow</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <section id="test-cards">
+      <title>Test Credit Card Numbers</title>
+      <p>Use these card numbers in sandbox to simulate card payments:</p>
+      <table>
+        <title>PayPal sandbox test card numbers</title>
+        <tgroup cols="3">
+          <colspec colname="card" colwidth="1.2*"/>
+          <colspec colname="number" colwidth="2*"/>
+          <colspec colname="notes" colwidth="1.8*"/>
+          <thead>
+            <row><entry>Card Type</entry><entry>Number</entry><entry>Notes</entry></row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>Visa</entry>
+              <entry><codeph>4111111111111111</codeph></entry>
+              <entry>Any future expiry, any CVV</entry>
+            </row>
+            <row>
+              <entry>Mastercard</entry>
+              <entry><codeph>5500005555555559</codeph></entry>
+              <entry>Any future expiry, any CVV</entry>
+            </row>
+            <row>
+              <entry>Amex</entry>
+              <entry><codeph>378282246310005</codeph></entry>
+              <entry>4-digit CVV</entry>
+            </row>
+            <row>
+              <entry>Discover</entry>
+              <entry><codeph>6011111111111117</codeph></entry>
+              <entry>Any future expiry, any CVV</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <section id="simulate-scenarios">
+      <title>Simulating Error Scenarios</title>
+      <p>Use specific amounts to trigger sandbox error responses:</p>
+      <table>
+        <title>Sandbox trigger amounts for error simulation</title>
+        <tgroup cols="2">
+          <colspec colname="amount" colwidth="1*"/>
+          <colspec colname="result" colwidth="3*"/>
+          <thead>
+            <row><entry>Amount (USD)</entry><entry>Simulated Outcome</entry></row>
+          </thead>
+          <tbody>
+            <row><entry><codeph>9.99</codeph></entry>
+                 <entry>Instrument declined — simulates insufficient funds</entry></row>
+            <row><entry><codeph>4444.44</codeph></entry>
+                 <entry>Processing error — simulates gateway failure</entry></row>
+            <row><entry><codeph>8888.88</codeph></entry>
+                 <entry>Fraud detection triggered</entry></row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <note type="tip">
+      <p>Create multiple sandbox buyer accounts with different funding sources
+        (PayPal balance, bank account, credit card) to test the full range of
+        payment scenarios before going live.</p>
+    </note>
+
+  </conbody>
+</concept>

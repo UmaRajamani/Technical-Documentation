@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="reuse-library">
+  <title>Reuse Library</title>
+  <shortdesc>Shared content elements reused across topics via conref.
+    Not included in the output TOC.</shortdesc>
+  <body>
+
+    <!-- Shared warnings -->
+    <note type="warning" id="sandbox-warning">
+      <p>Sandbox and live credentials are separate. Never use live credentials
+        in sandbox API calls or vice versa.</p>
+    </note>
+
+    <note type="warning" id="https-warning">
+      <p>All API requests must use HTTPS. Requests over HTTP are rejected with
+        a <codeph>301 Moved Permanently</codeph> redirect.</p>
+    </note>
+
+    <note type="warning" id="refund-180-days">
+      <p>Refunds must be issued within 180 days of the original capture. After
+        180 days, contact the buyer directly to arrange an alternative refund method.</p>
+    </note>
+
+    <!-- Shared notes -->
+    <note type="note" id="request-id-note">
+      <p>Use the <codeph>PayPal-Request-Id</codeph> header on all POST requests.
+        PayPal returns the cached response for duplicate requests with the same ID,
+        preventing duplicate charges on retries.</p>
+    </note>
+
+    <note type="note" id="token-cache-note">
+      <p>Cache the access token and reuse it until 5 minutes before expiry.
+        Generating a new token per request degrades performance and may trigger
+        rate limits.</p>
+    </note>
+
+    <note type="tip" id="debug-id-tip">
+      <p>Always log the <codeph>debug_id</codeph> from error responses.
+        Include it when contacting PayPal Developer Support to enable rapid
+        root-cause analysis.</p>
+    </note>
+
+    <note type="tip" id="sandbox-simulate-tip">
+      <p>Use the PayPal Developer Dashboard to send test webhook events without
+        completing a real transaction. Navigate to <b>Webhooks → Simulate</b>.</p>
+    </note>
+
+    <!-- Shared prereq snippets -->
+    <p id="auth-prereq">A valid OAuth 2.0 Bearer token — see
+      <xref href="../getting-started/authenticate.dita"/>.</p>
+
+    <p id="sandbox-note">
+      All transactions in sandbox are simulated. No real money is transferred.
+    </p>
+
+  </body>
+</topic>

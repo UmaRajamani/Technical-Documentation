@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE task PUBLIC "-//OASIS//DTD DITA Task//EN" "task.dtd">
+<task id="capture-order">
+  <title>Capture a Payment Order</title>
+  <shortdesc>Collect funds from a buyer-approved PayPal order to complete the
+    transaction.</shortdesc>
+  <taskbody>
+
+    <prereq>
+      <ul>
+        <li>An order with status <codeph>APPROVED</codeph> — buyer has confirmed payment</li>
+        <li>The order <codeph>id</codeph> returned when the order was created</li>
+        <li>A valid OAuth 2.0 Bearer token</li>
+      </ul>
+    </prereq>
+
+    <steps>
+      <step>
+        <cmd>Confirm the order status is <codeph>APPROVED</codeph> before capturing.</cmd>
+        <info>
+          <codeblock>curl -X GET \
+  https://api-m.sandbox.paypal.com/v2/checkout/orders/5O190127TN364715T \
+  -H "Authorization: Bearer A21AAFEpH4PsADbl..."</codeblock>
+        </info>
+        <stepresult>Verify <codeph>"status": "APPROVED"</codeph> in the response.</stepresult>
+      </step>
+
+      <step>
+        <cmd>Send a POST request to the capture endpoint.</cmd>
+        <info>
+          <codeblock>curl -X POST \
+  https://api-m.sandbox.paypal.com/v2/checkout/orders/5O190127TN364715T/capture \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer A21AAFEpH4PsADbl..." \
+  -H "PayPal-Request-Id: capture-20240915-001"</codeblock>
+        </info>
+      </step>
+
+      <step>
+        <cmd>Verify the response shows <codeph>"status": "COMPLETED"</codeph>.</cmd>
+        <info>
+          <codeblock>{
+  "id": "5O190127TN364715T",
+  "status": "COMPLETED",
+  "purchase_units": [
+    {
+      "reference_id": "store-order-12345",
+      "payments": {
+        "captures": [
+          {
+            "id": "3C679366HH908993F",
+            "status": "COMPLETED",
+            "amount": {
+              "currency_code": "USD",
+              "value": "220.00"
+            },
+            "final_capture": true,
+            "seller_protection": {
+              "status": "ELIGIBLE",
+              "dispute_categories": [
+                "ITEM_NOT_RECEIVED",
+                "UNAUTHORIZED_TRANSACTION"
+              ]
+            },
+            "create_time": "2024-09-15T10:32:00Z",
+            "update_time": "2024-09-15T10:32:01Z"
+          }
+        ]
+      }
+    }
+  ]
+}</codeblock>
+        </info>
+        <stepresult>Funds are collected. Store the capture <codeph>id</codeph>
+          (<codeph>3C679366HH908993F</codeph>) for refund operations.</stepresult>
+      </step>
+    </steps>
+
+    <result>
+      <p>Payment is complete. Funds are transferred to your PayPal account and
+        will be available for withdrawal according to your payout schedule.</p>
+    </result>
+
+    <postreq>
+      <p>To return funds to the buyer, see
+        <xref href="../payments/refund-payment.dita"/>.</p>
+    </postreq>
+
+  </taskbody>
+</task>

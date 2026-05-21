@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="orders-concept">
+  <title>Orders API Overview</title>
+  <shortdesc>The PayPal Orders API (v2) is the recommended integration for accepting
+    PayPal payments — supporting wallet, card, and alternative payment methods through
+    a single unified flow.</shortdesc>
+  <conbody>
+
+    <p>An <i>order</i> represents a buyer's intent to purchase. The order lifecycle
+      has three stages: Create, Approve, and Capture.</p>
+
+    <section id="order-lifecycle">
+      <title>Order Lifecycle</title>
+      <table>
+        <title>PayPal order lifecycle stages</title>
+        <tgroup cols="3">
+          <colspec colname="stage" colwidth="1*"/>
+          <colspec colname="status" colwidth="1*"/>
+          <colspec colname="desc" colwidth="3*"/>
+          <thead>
+            <row><entry>Stage</entry><entry>Status</entry><entry>Description</entry></row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>1. Create</entry>
+              <entry><codeph>CREATED</codeph></entry>
+              <entry>Your server creates the order with item details and amount.</entry>
+            </row>
+            <row>
+              <entry>2. Approve</entry>
+              <entry><codeph>APPROVED</codeph></entry>
+              <entry>Buyer logs in to PayPal and approves the payment.</entry>
+            </row>
+            <row>
+              <entry>3. Capture</entry>
+              <entry><codeph>COMPLETED</codeph></entry>
+              <entry>Your server captures funds. Money moves to your account.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <section id="intent-types">
+      <title>Payment Intent</title>
+      <p>Set <codeph>intent</codeph> when creating an order:</p>
+      <ul>
+        <li><b>CAPTURE</b> — Immediately collect funds when the buyer approves.
+          Use for most standard checkouts.</li>
+        <li><b>AUTHORIZE</b> — Reserve funds for up to 29 days without collecting.
+          Use when fulfillment is delayed (e.g., pre-orders, physical goods).</li>
+      </ul>
+    </section>
+
+    <section id="purchase-units">
+      <title>Purchase Units</title>
+      <p>Each order contains one or more <codeph>purchase_units</codeph>. A purchase unit
+        represents a payment to a single payee and includes:</p>
+      <ul>
+        <li>Amount (value and currency)</li>
+        <li>Optional item breakdown (items, shipping, tax, handling)</li>
+        <li>Shipping address</li>
+        <li>Custom reference ID for your records</li>
+        <li>Soft descriptor (appears on buyer's statement)</li>
+      </ul>
+    </section>
+
+    <note type="note">
+      <p>Multi-seller orders (multiple <codeph>purchase_units</codeph>) require
+        PayPal Marketplace or Platform approval. Contact PayPal to enable this feature.</p>
+    </note>
+
+  </conbody>
+</concept>

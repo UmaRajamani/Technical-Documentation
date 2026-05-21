@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="payments-concept">
+  <title>Payments API Overview</title>
+  <shortdesc>The PayPal Payments API handles captures, refunds, and authorizations
+    on existing payment transactions created through the Orders API.</shortdesc>
+  <conbody>
+
+    <p>The Payments API (v2) operates on <i>captures</i> and <i>authorizations</i>
+      that are created as part of the Orders workflow. Use it to issue refunds,
+      void authorizations, or retrieve transaction details.</p>
+
+    <section id="capture-vs-auth">
+      <title>Captures vs Authorizations</title>
+      <table>
+        <title>PayPal capture and authorization comparison</title>
+        <tgroup cols="3">
+          <colspec colname="type" colwidth="1.2*"/>
+          <colspec colname="when" colwidth="2*"/>
+          <colspec colname="expiry" colwidth="1.8*"/>
+          <thead>
+            <row><entry>Type</entry><entry>When to Use</entry><entry>Expiry</entry></row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>Capture</entry>
+              <entry>Immediate payment collection (CAPTURE intent)</entry>
+              <entry>Permanent — refund to reverse</entry>
+            </row>
+            <row>
+              <entry>Authorization</entry>
+              <entry>Reserve funds, collect later (AUTHORIZE intent)</entry>
+              <entry>29 days; void or re-authorize</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <section id="refund-types">
+      <title>Refund Types</title>
+      <ul>
+        <li><b>Full refund</b> — Returns the entire captured amount to the buyer.</li>
+        <li><b>Partial refund</b> — Returns a specific amount less than the capture.
+          Multiple partial refunds are allowed until the full amount is refunded.</li>
+      </ul>
+    </section>
+
+    <section id="refund-timeline">
+      <title>Refund Processing Timeline</title>
+      <table>
+        <title>Refund processing times by funding source</title>
+        <tgroup cols="2">
+          <colspec colname="source" colwidth="1.5*"/>
+          <colspec colname="time" colwidth="2.5*"/>
+          <thead>
+            <row><entry>Funding Source</entry><entry>Processing Time</entry></row>
+          </thead>
+          <tbody>
+            <row><entry>PayPal balance</entry>
+                 <entry>Instant</entry></row>
+            <row><entry>Credit / debit card</entry>
+                 <entry>3–5 business days</entry></row>
+            <row><entry>Bank account</entry>
+                 <entry>3–5 business days</entry></row>
+            <row><entry>PayPal Credit</entry>
+                 <entry>Up to 30 days</entry></row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <note type="warning">
+      <p>Refunds must be issued within 180 days of the original transaction.
+        After 180 days, you must process the refund outside PayPal
+        (e.g., check or bank transfer).</p>
+    </note>
+
+  </conbody>
+</concept>

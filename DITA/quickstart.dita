@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE task PUBLIC "-//OASIS//DTD DITA Task//EN" "task.dtd">
+<task id="paypal-quickstart">
+  <title>Quickstart — Accept Your First PayPal Payment</title>
+  <shortdesc>Create a sandbox order and capture a payment end-to-end in under 15 minutes
+    using the PayPal REST API and curl.</shortdesc>
+  <taskbody>
+
+    <prereq>
+      <ul>
+        <li>A PayPal Developer account — sign up at
+          <xref href="https://developer.paypal.com" format="html" scope="external"
+                >developer.paypal.com</xref></li>
+        <li>Sandbox <codeph>client_id</codeph> and <codeph>client_secret</codeph> from
+          the Developer Dashboard</li>
+        <li>curl or Postman installed</li>
+      </ul>
+    </prereq>
+
+    <steps>
+      <step>
+        <cmd>Log in to the PayPal Developer Dashboard and create a sandbox app.</cmd>
+        <info>Navigate to <b>My Apps &amp; Credentials → Sandbox → Create App</b>.
+          Copy the <codeph>client_id</codeph> and <codeph>client_secret</codeph>.</info>
+      </step>
+
+      <step>
+        <cmd>Obtain an OAuth 2.0 access token.</cmd>
+        <info>
+          <codeblock>curl -X POST https://api-m.sandbox.paypal.com/v1/oauth2/token \
+  -H "Accept: application/json" \
+  -H "Accept-Language: en_US" \
+  -u "CLIENT_ID:CLIENT_SECRET" \
+  -d "grant_type=client_credentials"</codeblock>
+        </info>
+        <stepresult>Response contains <codeph>access_token</codeph> valid for 32400 seconds (9 hours).</stepresult>
+      </step>
+
+      <step>
+        <cmd>Create a payment order for $10.00 USD.</cmd>
+        <info>
+          <codeblock>curl -X POST https://api-m.sandbox.paypal.com/v2/checkout/orders \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ACCESS_TOKEN" \
+  -H "PayPal-Request-Id: order-quickstart-001" \
+  -d '{
+    "intent": "CAPTURE",
+    "purchase_units": [{
+      "amount": {
+        "currency_code": "USD",
+        "value": "10.00"
+      },
+      "description": "Quickstart test order"
+    }]
+  }'</codeblock>
+        </info>
+        <stepresult>Response returns an <codeph>id</codeph> (e.g., <codeph>5O190127TN364715T</codeph>)
+          and status <codeph>CREATED</codeph>.</stepresult>
+      </step>
+
+      <step>
+        <cmd>Redirect the buyer to the PayPal approval URL from the response links.</cmd>
+        <info>Parse the <codeph>links</codeph> array for <codeph>rel: "approve"</codeph>
+          and redirect the buyer's browser to that URL.</info>
+        <stepresult>The buyer logs in to PayPal and approves the payment.
+          PayPal redirects back to your <codeph>return_url</codeph>.</stepresult>
+      </step>
+
+      <step>
+        <cmd>Capture the approved order to collect funds.</cmd>
+        <info>
+          <codeblock>curl -X POST https://api-m.sandbox.paypal.com/v2/checkout/orders/ORDER_ID/capture \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ACCESS_TOKEN"</codeblock>
+        </info>
+        <stepresult>Status changes to <codeph>COMPLETED</codeph>. Funds are collected.</stepresult>
+      </step>
+    </steps>
+
+    <result>
+      <p>Your first PayPal payment is complete. The order <codeph>id</codeph> can be
+        used to issue refunds or retrieve transaction details.</p>
+    </result>
+
+    <postreq>
+      <p>See <xref href="authenticate.dita"/> for full token management, or
+        <xref href="../orders/create-order.dita"/> for advanced order options.</p>
+    </postreq>
+
+  </taskbody>
+</task>

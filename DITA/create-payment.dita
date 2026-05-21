@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE task PUBLIC "-//OASIS//DTD DITA Task//EN" "task.dtd">
+<task id="create-payment">
+  <title>Capture a Payment</title>
+  <shortdesc>Capture funds from an authorized PayPal payment using the Payments API.</shortdesc>
+  <taskbody>
+
+    <prereq>
+      <ul>
+        <li>An order created with <codeph>"intent": "AUTHORIZE"</codeph>
+          and status <codeph>APPROVED</codeph></li>
+        <li>The authorization <codeph>id</codeph> from the order response</li>
+        <li>A valid Bearer token</li>
+      </ul>
+    </prereq>
+
+    <steps>
+      <step>
+        <cmd>Retrieve the authorization ID from the approved order.</cmd>
+        <info>
+          <codeblock>curl -X GET \
+  https://api-m.sandbox.paypal.com/v2/checkout/orders/ORDER_ID \
+  -H "Authorization: Bearer A21AAFEpH4PsADbl..."</codeblock>
+        </info>
+        <stepresult>Parse <codeph>purchase_units[0].payments.authorizations[0].id</codeph>.</stepresult>
+      </step>
+
+      <step>
+        <cmd>Capture the authorization to collect funds.</cmd>
+        <info>
+          <codeblock>curl -X POST \
+  https://api-m.sandbox.paypal.com/v2/payments/authorizations/AUTH_ID/capture \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer A21AAFEpH4PsADbl..." \
+  -H "PayPal-Request-Id: capture-auth-001" \
+  -d '{
+    "amount": {
+      "currency_code": "USD",
+      "value": "220.00"
+    },
+    "final_capture": true,
+    "note_to_payer": "Thank you for your order! Shipping in 2 days.",
+    "invoice_id": "INV-12345"
+  }'</codeblock>
+        </info>
+      </step>
+
+      <step>
+        <cmd>Verify the response status is <codeph>COMPLETED</codeph>.</cmd>
+        <info>
+          <codeblock>{
+  "id": "3C679366HH908993F",
+  "status": "COMPLETED",
+  "amount": {
+    "currency_code": "USD",
+    "value": "220.00"
+  },
+  "final_capture": true,
+  "seller_protection": {
+    "status": "ELIGIBLE"
+  },
+  "invoice_id": "INV-12345",
+  "create_time": "2024-09-15T10:35:00Z"
+}</codeblock>
+        </info>
+        <stepresult>Funds collected. Store the capture <codeph>id</codeph> for refund operations.</stepresult>
+      </step>
+    </steps>
+
+    <result>
+      <p>The authorization is captured and funds move to your PayPal account.</p>
+    </result>
+
+  </taskbody>
+</task>
