@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PayPal REST API — Developer Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Epilogue:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pp-blue:      #003087;
+  --pp-sky:       #009cde;
+  --pp-gold:      #ffd140;
+  --pp-ink:       #0a1628;
+  --pp-ink2:      #1c2d45;
+  --pp-ink3:      #4a6080;
+  --pp-muted:     #7a95b3;
+  --pp-surf:      #f5f8fc;
+  --pp-surf2:     #eaf1f9;
+  --pp-border:    #dae5f0;
+  --pp-border2:   #c0d5e8;
+  --pp-green:     #0b7a3e;
+  --pp-green2:    #e8f8ef;
+  --pp-red:       #c42b2b;
+  --pp-red2:      #fdf0f0;
+  --pp-amber:     #996600;
+  --pp-amber2:    #fff9e6;
+  --pp-purple:    #5c35a0;
+  --pp-purple2:   #f0eaff;
+  --code-bg:      #0d1117;
+  --code-fg:      #e6edf3;
+  --nav-w:        268px;
+  --head-h:       60px;
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:'Epilogue',sans-serif;
+  background:#fff;
+  color:var(--pp-ink);
+  line-height:1.6;
+  overflow-x:hidden;
+}
+
+/* ══════════════ TOP NAV ══════════════ */
+.topnav{
+  position:fixed;top:0;left:0;right:0;
+  height:var(--head-h);
+  background:var(--pp-blue);
+  display:flex;align-items:center;
+  padding:0 28px;gap:20px;
+  z-index:100;
+  box-shadow:0 2px 20px rgba(0,48,135,.4);
+}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;flex-shrink:0}
+.logo-pp{
+  width:38px;height:38px;
+  background:var(--pp-gold);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;
+  font-size:16px;font-weight:800;
+  color:var(--pp-blue);
+  letter-spacing:-.5px;
+}
+.logo-text{
+  font-family:'Syne',sans-serif;
+  font-size:18px;font-weight:700;
+  color:#fff;
+  letter-spacing:-.3px;
+}
+.logo-text em{color:var(--pp-gold);font-style:normal}
+.nav-sep{width:1px;height:22px;background:rgba(255,255,255,.2)}
+.nav-tag{font-size:12px;color:rgba(255,255,255,.7);font-weight:400;letter-spacing:.3px}
+.nav-r{margin-left:auto;display:flex;align-items:center;gap:12px}
+.nav-pill{
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.85);
+  font-size:11px;font-weight:600;
+  padding:3px 12px;border-radius:20px;
+  letter-spacing:.5px;
+}
+.nav-btn{
+  background:var(--pp-gold);color:var(--pp-blue);
+  font-size:12px;font-weight:700;
+  padding:7px 16px;border-radius:8px;
+  border:none;cursor:pointer;font-family:'Epilogue',sans-serif;
+  letter-spacing:.2px;
+}
+.nav-search{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;padding:7px 14px;
+  font-size:13px;color:rgba(255,255,255,.6);
+  cursor:text;transition:all .15s;
+  min-width:200px;
+}
+.nav-search:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8)}
+
+/* ══════════════ LAYOUT ══════════════ */
+.layout{display:flex;padding-top:var(--head-h)}
+
+/* ══════════════ SIDEBAR ══════════════ */
+.sidebar{
+  width:var(--nav-w);flex-shrink:0;
+  position:fixed;top:var(--head-h);bottom:0;left:0;
+  overflow-y:auto;
+  background:var(--pp-ink);
+  padding:0 0 40px;
+}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:#2a3f5f;border-radius:2px}
+
+.nav-section-hdr{
+  font-size:10px;font-weight:700;
+  letter-spacing:1.4px;text-transform:uppercase;
+  color:rgba(255,255,255,.35);
+  padding:20px 20px 6px;
+  margin-top:4px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 20px;
+  font-size:13.5px;color:rgba(255,255,255,.6);
+  cursor:pointer;border-left:3px solid transparent;
+  text-decoration:none;transition:all .12s;
+  line-height:1.4;font-weight:400;
+}
+.nav-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9);border-left-color:rgba(255,255,255,.2)}
+.nav-item.active{
+  background:rgba(0,156,222,.15);
+  color:#fff;border-left-color:var(--pp-sky);
+  font-weight:600;
+}
+.nav-item.sub{padding-left:36px;font-size:13px}
+.tdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dc{background:#009cde}.dt{background:#ffd140}.dr{background:#f0a500}.dm{background:#9b59f5}
+.dw{background:#2ecc71}.ds{background:#e74c3c}
+
+/* ══════════════ MAIN ══════════════ */
+.main{
+  margin-left:var(--nav-w);flex:1;min-width:0;
+  padding:48px 60px 100px;
+  max-width:calc(var(--nav-w) + 860px);
+}
+
+/* ══════════════ BREADCRUMB ══════════════ */
+.breadcrumb{
+  display:flex;align-items:center;gap:6px;
+  font-size:12.5px;color:var(--pp-muted);margin-bottom:28px;
+}
+.breadcrumb a{color:var(--pp-sky);text-decoration:none}
+.breadcrumb a:hover{text-decoration:underline}
+.breadcrumb .sep{color:var(--pp-border2)}
+
+/* ══════════════ TOPIC HEADER ══════════════ */
+.topic-hdr{margin-bottom:32px}
+.topic-type{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:4px 12px;border-radius:20px;
+  font-size:11px;font-weight:700;letter-spacing:.5px;
+  margin-bottom:14px;font-family:'Syne',sans-serif;
+}
+.tt-c{background:#e3f4ff;color:#005ea6;border:1px solid #b3ddf5}
+.tt-t{background:#fff8d6;color:#7a5500;border:1px solid #f0d060}
+.tt-r{background:#fff3e0;color:#8a4000;border:1px solid #f5c07a}
+.tt-m{background:#f0eaff;color:#4a1a8a;border:1px solid #c9aff5}
+.tt-w{background:#e8f8ef;color:#0b5e30;border:1px solid #7fd4a8}
+.tt-s{background:#fdf0f0;color:#8a1a1a;border:1px solid #f5a0a0}
+.tt-dv{background:#fff0f8;color:#7a0060;border:1px solid #f0a0d8}
+
+h1.ttitle{
+  font-family:'Syne',sans-serif;
+  font-size:36px;font-weight:700;
+  line-height:1.15;
+  color:var(--pp-ink);
+  letter-spacing:-.7px;
+  margin-bottom:16px;
+}
+.shortdesc{
+  font-size:16px;color:var(--pp-ink2);
+  line-height:1.7;
+  padding:14px 20px;
+  background:var(--pp-surf);
+  border-left:4px solid var(--pp-sky);
+  border-radius:0 10px 10px 0;
+  margin-bottom:32px;
+  font-weight:300;
+}
+
+/* ══════════════ HEADINGS ══════════════ */
+h2{
+  font-family:'Syne',sans-serif;
+  font-size:20px;font-weight:700;
+  color:var(--pp-ink);
+  margin:40px 0 14px;
+  padding-bottom:10px;
+  border-bottom:2px solid var(--pp-border);
+  letter-spacing:-.3px;
+}
+h3{
+  font-size:15px;font-weight:600;
+  color:var(--pp-ink2);
+  margin:24px 0 10px;
+}
+
+/* ══════════════ BODY TEXT ══════════════ */
+p{font-size:15px;line-height:1.8;color:#2d4060;margin-bottom:14px}
+a{color:var(--pp-sky);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ══════════════ LISTS ══════════════ */
+ul,ol{padding-left:24px;margin:10px 0 18px;color:#2d4060;font-size:15px;line-height:1.8}
+li{margin-bottom:5px}
+
+/* ══════════════ PREREQ ══════════════ */
+.prereq{
+  background:var(--pp-green2);
+  border:1px solid #b3e6cc;
+  border-radius:12px;
+  padding:16px 20px;margin:20px 0;
+}
+.prereq-lbl{
+  font-size:10.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.9px;
+  color:var(--pp-green);margin-bottom:10px;
+  font-family:'Syne',sans-serif;
+}
+
+/* ══════════════ STEPS ══════════════ */
+.steps{list-style:none;padding:0;margin:24px 0}
+.step-item{display:flex;gap:18px;margin-bottom:28px;align-items:flex-start}
+.step-num{
+  flex-shrink:0;width:30px;height:30px;
+  background:linear-gradient(135deg,var(--pp-blue),var(--pp-sky));
+  color:#fff;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;margin-top:2px;
+  box-shadow:0 3px 10px rgba(0,48,135,.25);
+  font-family:'Syne',sans-serif;
+}
+.step-body{flex:1}
+.step-cmd{font-size:15px;color:var(--pp-ink);font-weight:600;margin-bottom:10px;line-height:1.5}
+.step-info{font-size:14px;color:#3a5570;margin-bottom:8px;line-height:1.65}
+.step-result{
+  font-size:13px;color:var(--pp-green);
+  background:var(--pp-green2);
+  border:1px solid #b3e6cc;
+  padding:7px 14px;border-radius:8px;margin-top:10px;
+  display:inline-flex;align-items:center;gap:8px;
+  font-weight:500;
+}
+.step-result::before{content:'✓';font-weight:800;font-size:14px}
+
+/* ══════════════ RESULT / POSTREQ ══════════════ */
+.result-box{
+  background:#eef5ff;border-left:4px solid var(--pp-sky);
+  border-radius:0 10px 10px 0;padding:14px 18px;margin:20px 0;
+  font-size:15px;color:var(--pp-ink2);
+}
+.result-lbl{
+  font-size:10.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--pp-sky);margin-bottom:6px;
+  font-family:'Syne',sans-serif;
+}
+.postreq-box{
+  background:var(--pp-amber2);border-left:4px solid #d4a017;
+  border-radius:0 10px 10px 0;padding:14px 18px;margin:20px 0;
+  font-size:15px;color:#5a3d00;
+}
+.postreq-lbl{
+  font-size:10.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--pp-amber);margin-bottom:6px;
+  font-family:'Syne',sans-serif;
+}
+
+/* ══════════════ NOTES ══════════════ */
+.note{
+  display:flex;gap:14px;padding:14px 18px;
+  border-radius:12px;margin:20px 0;
+  font-size:14px;line-height:1.7;border:1px solid;
+}
+.note.warning{background:var(--pp-red2);border-color:#f5c0c0;color:#7a1a1a}
+.note.tip{background:var(--pp-green2);border-color:#b3e6cc;color:#0a4a25}
+.note.note{background:#eef5ff;border-color:#b3d4f5;color:#0a2d60}
+.note.caution{background:var(--pp-amber2);border-color:#f0d080;color:#5a3d00}
+.note-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.note-lbl{
+  font-size:10.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;margin-bottom:4px;display:block;
+  font-family:'Syne',sans-serif;
+}
+.warning .note-lbl{color:var(--pp-red)}.tip .note-lbl{color:var(--pp-green)}
+.note .note-lbl{color:var(--pp-blue)}.caution .note-lbl{color:var(--pp-amber)}
+
+/* ══════════════ INLINE CODE ══════════════ */
+code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12.5px;background:#eef3fa;
+  border:1px solid var(--pp-border);
+  padding:1px 6px;border-radius:5px;color:#003087;
+}
+
+/* ══════════════ CODE BLOCK ══════════════ */
+.codeblock{
+  background:var(--code-bg);border-radius:12px;
+  margin:16px 0;overflow:hidden;
+  border:1px solid #21262d;
+}
+.cb-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 18px;border-bottom:1px solid #21262d;
+  background:#161b22;
+}
+.cb-lang{
+  font-size:11px;font-weight:600;
+  color:#8b949e;font-family:'JetBrains Mono',monospace;
+  letter-spacing:.6px;text-transform:uppercase;
+}
+.cb-copy{
+  font-size:11px;color:#8b949e;cursor:pointer;
+  padding:3px 10px;border-radius:6px;
+  border:1px solid #30363d;background:transparent;
+  font-family:'Epilogue',sans-serif;font-weight:500;
+  transition:all .15s;
+}
+.cb-copy:hover{color:#e6edf3;border-color:#8b949e;background:#30363d}
+.cb-body{padding:18px 22px;overflow-x:auto}
+.cb-body pre{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12.5px;color:var(--code-fg);
+  line-height:1.75;white-space:pre;margin:0;
+}
+.ck{color:#ff7b72}.cs{color:#a5d6ff}.cv{color:#79c0ff}
+.cc{color:#8b949e;font-style:italic}.cf{color:#d2a8ff}
+.co{color:#ffa657}.cm{color:#7ee787}
+
+/* ══════════════ TABLES ══════════════ */
+.dtable{
+  width:100%;border-collapse:collapse;
+  margin:18px 0;font-size:14px;
+  border-radius:12px;overflow:hidden;
+  border:1px solid var(--pp-border);
+}
+.dtable thead tr{background:var(--pp-blue);color:#fff}
+.dtable th{padding:11px 16px;text-align:left;font-weight:600;font-size:13px;letter-spacing:.2px;font-family:'Syne',sans-serif}
+.dtable td{padding:11px 16px;border-bottom:1px solid var(--pp-border);vertical-align:top;color:#2d4060;line-height:1.55}
+.dtable tbody tr:last-child td{border-bottom:none}
+.dtable tbody tr:nth-child(even) td{background:var(--pp-surf)}
+.dtable tbody tr:hover td{background:var(--pp-surf2);transition:background .1s}
+
+/* Reference properties table */
+.proptable{
+  width:100%;border-collapse:collapse;margin:18px 0;
+  border:1px solid var(--pp-purple2);border-radius:12px;overflow:hidden;
+}
+.proptable thead tr{background:var(--pp-purple)}
+.proptable th{
+  padding:10px 14px;text-align:left;
+  font-size:12.5px;font-weight:600;color:#fff;
+  font-family:'JetBrains Mono',monospace;letter-spacing:.3px;
+}
+.proptable td{padding:10px 14px;border-bottom:1px solid #e8dff5;vertical-align:top}
+.proptable tbody tr:last-child td{border-bottom:none}
+.proptable tbody tr:nth-child(even) td{background:#f8f4ff}
+.pf{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--pp-purple);font-weight:600}
+.pt{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--pp-sky)}
+.pd{font-size:13.5px;color:#2d4060}
+
+/* Error table */
+.errtable{
+  width:100%;border-collapse:collapse;margin:18px 0;
+  border:1px solid #f5c0c0;border-radius:12px;overflow:hidden;
+}
+.errtable thead tr{background:#7a1a1a;color:#fff}
+.errtable th{padding:10px 14px;text-align:left;font-size:12.5px;font-weight:600;letter-spacing:.2px}
+.errtable td{padding:10px 14px;border-bottom:1px solid #fde0e0;vertical-align:top}
+.errtable tbody tr:last-child td{border-bottom:none}
+.errtable tbody tr:nth-child(even) td{background:#fff8f8}
+.ehttp{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--pp-red);font-size:13px}
+.ecode{font-family:'JetBrains Mono',monospace;color:#0050a0;font-size:12px}
+.edesc{font-size:13.5px;color:#2d4060}
+
+/* ══════════════ MAP TREE ══════════════ */
+.maptree{border:1px solid var(--pp-border);border-radius:12px;overflow:hidden;margin:18px 0}
+.mt-hdr{background:var(--pp-blue);color:#fff;padding:12px 18px;font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
+.mt-body{padding:10px 0}
+.mt-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 18px;font-size:13px;
+  font-family:'JetBrains Mono',monospace;color:var(--pp-ink2);
+  cursor:pointer;transition:background .1s;
+}
+.mt-item:hover{background:var(--pp-surf2)}
+.mt-item.kd{color:var(--pp-sky);font-style:italic;background:#f0f9ff}
+.mt-item.chap{font-weight:700;color:var(--pp-blue);background:var(--pp-surf2);font-family:'Syne',sans-serif;font-size:13.5px}
+.mt-item.rt{color:var(--pp-red);background:var(--pp-red2);font-weight:600;font-family:'Syne',sans-serif}
+.mt1{padding-left:36px}.mt2{padding-left:54px}
+.mt-href{font-size:10.5px;color:var(--pp-muted);margin-left:6px;font-style:normal}
+.ttag{font-size:10px;padding:1px 7px;border-radius:10px;font-weight:700;margin-left:6px;font-family:'Syne',sans-serif}
+.tag-c{background:#e3f4ff;color:#005ea6}
+.tag-t{background:#fff8d6;color:#7a5500}
+.tag-r{background:#fff3e0;color:#8a4000}
+
+/* ══════════════ DITAVAL RULES ══════════════ */
+.dvr{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 18px;border-radius:10px;margin:8px 0;
+  font-family:'JetBrains Mono',monospace;font-size:13px;border:1px solid;
+}
+.dvr-i{background:var(--pp-green2);border-color:#b3e6cc}
+.dvr-e{background:var(--pp-red2);border-color:#f5c0c0}
+.dv-a{color:var(--pp-purple);font-weight:600}
+.dv-eq{color:var(--pp-muted);margin:0 4px}
+.dv-v{color:var(--pp-blue)}
+.dv-act{margin-left:auto;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:3px 12px;border-radius:12px;font-family:'Syne',sans-serif}
+.dvr-i .dv-act{background:#c6f0d8;color:var(--pp-green);border:1px solid #b3e6cc}
+.dvr-e .dv-act{background:#f8d0d0;color:var(--pp-red);border:1px solid #f5c0c0}
+
+/* ══════════════ SCHEMATRON ══════════════ */
+.schpat{border:1px solid var(--pp-border);border-radius:12px;margin:18px 0;overflow:hidden}
+.sch-hdr{
+  background:var(--pp-green);color:#fff;
+  padding:12px 18px;font-family:'JetBrains Mono',monospace;
+  font-size:12.5px;font-weight:500;
+  display:flex;align-items:center;gap:10px;
+}
+.sch-body{padding:16px 18px;background:var(--pp-surf)}
+.sch-row{margin-bottom:10px;font-size:13px}
+.sch-k{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--pp-muted);margin-bottom:4px;font-family:'Syne',sans-serif}
+.sch-v{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--pp-purple);background:var(--pp-purple2);padding:3px 9px;border-radius:5px;display:inline-block}
+.sch-msg{background:var(--pp-amber2);border:1px solid #f0d080;border-radius:8px;padding:8px 14px;font-size:13px;color:#5a3d00;margin-top:10px}
+.sch-err{background:var(--pp-red2);border:1px solid #f5c0c0;border-radius:8px;padding:8px 14px;font-size:13px;color:#7a1a1a;margin-top:10px}
+.sch-role{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 9px;border-radius:10px;margin-left:auto;font-family:'Syne',sans-serif}
+.sr-w{background:#fff8d6;color:#7a5500;border:1px solid #f0d060}
+.sr-e{background:#fde0e0;color:#8a1a1a;border:1px solid #f5a0a0}
+
+/* ══════════════ RELATED LINKS ══════════════ */
+.rel-links{border-top:2px solid var(--pp-border);margin-top:48px;padding-top:28px}
+.rl-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--pp-muted);margin-bottom:14px;font-family:'Syne',sans-serif}
+.rl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.rl-item{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;border:1px solid var(--pp-border);
+  border-radius:10px;text-decoration:none;color:var(--pp-ink2);
+  font-size:13.5px;transition:all .14s;cursor:pointer;
+  background:#fff;
+}
+.rl-item:hover{background:var(--pp-surf2);border-color:var(--pp-sky);color:var(--pp-blue);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,48,135,.1)}
+.rl-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.rl-type{font-size:10.5px;color:var(--pp-muted);margin-left:auto;font-weight:500}
+
+/* ══════════════ PREV/NEXT ══════════════ */
+.tnav{display:flex;justify-content:space-between;border-top:1px solid var(--pp-border);padding-top:28px;margin-top:48px;gap:16px}
+.tn-btn{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 20px;border:1px solid var(--pp-border);
+  border-radius:10px;cursor:pointer;font-size:13.5px;color:var(--pp-ink2);
+  transition:all .14s;text-decoration:none;max-width:48%;
+  background:#fff;
+}
+.tn-btn:hover{background:var(--pp-surf2);border-color:var(--pp-sky);color:var(--pp-blue)}
+.tn-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--pp-muted);display:block;margin-bottom:3px;font-family:'Syne',sans-serif}
+
+/* ══════════════ CONREF BADGE ══════════════ */
+.conref-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:11.5px;color:var(--pp-purple);
+  background:var(--pp-purple2);border:1px dashed #c9aff5;
+  border-radius:7px;padding:4px 12px;margin-bottom:8px;
+  font-family:'JetBrains Mono',monospace;
+}
+
+/* ══════════════ ANIMATION ══════════════ */
+.topic-content{animation:fade .22s ease}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+@media(max-width:900px){
+  .sidebar{display:none}
+  .main{margin-left:0;padding:24px 20px}
+  h1.ttitle{font-size:26px}
+  .rl-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <a class="logo" href="#">
+    <div class="logo-pp">PP</div>
+    <div class="logo-text">Pay<em>Pal</em></div>
+  </a>
+  <div class="nav-sep"></div>
+  <span class="nav-tag">REST API — Developer Guide</span>
+  <div class="nav-r">
+    <span class="nav-pill">DITA-OT HTML5</span>
+    <div class="nav-search">🔍&nbsp; Search docs…</div>
+    <button class="nav-btn">Dashboard ↗</button>
+  </div>
+</nav>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+
+  <div class="nav-section-hdr">Getting Started</div>
+  <a class="nav-item" data-id="overview" href="#">
+    <span class="tdot dc"></span>API Overview
+  </a>
+  <a class="nav-item sub" data-id="quickstart" href="#">
+    <span class="tdot dt"></span>Quickstart
+  </a>
+  <a class="nav-item sub" data-id="authenticate" href="#">
+    <span class="tdot dt"></span>Authenticate with OAuth 2.0
+  </a>
+  <a class="nav-item sub" data-id="sandbox" href="#">
+    <span class="tdot dc"></span>Sandbox Testing
+  </a>
+
+  <div class="nav-section-hdr">Orders</div>
+  <a class="nav-item" data-id="orders-concept" href="#">
+    <span class="tdot dc"></span>Orders API Overview
+  </a>
+  <a class="nav-item sub" data-id="create-order" href="#">
+    <span class="tdot dt"></span>Create a Payment Order
+  </a>
+  <a class="nav-item sub" data-id="capture-order" href="#">
+    <span class="tdot dt"></span>Capture a Payment Order
+  </a>
+
+  <div class="nav-section-hdr">Payments</div>
+  <a class="nav-item" data-id="payments-concept" href="#">
+    <span class="tdot dc"></span>Payments API Overview
+  </a>
+  <a class="nav-item sub" data-id="capture-payment" href="#">
+    <span class="tdot dt"></span>Capture a Payment
+  </a>
+  <a class="nav-item sub" data-id="refund-payment" href="#">
+    <span class="tdot dt"></span>Refund a Payment
+  </a>
+
+  <div class="nav-section-hdr">Webhooks</div>
+  <a class="nav-item" data-id="webhooks-concept" href="#">
+    <span class="tdot dw"></span>Webhooks Overview
+  </a>
+  <a class="nav-item sub" data-id="register-webhook" href="#">
+    <span class="tdot dt"></span>Register a Webhook
+  </a>
+
+  <div class="nav-section-hdr">API Reference</div>
+  <a class="nav-item" data-id="order-object" href="#">
+    <span class="tdot dr"></span>Order Object
+  </a>
+  <a class="nav-item" data-id="payment-object" href="#">
+    <span class="tdot dr"></span>Payment Object
+  </a>
+  <a class="nav-item" data-id="error-codes" href="#">
+    <span class="tdot ds"></span>Error Codes
+  </a>
+
+  <div class="nav-section-hdr">Source Files</div>
+  <a class="nav-item" data-id="dita-map" href="#">
+    <span class="tdot dm"></span>DITA Map
+  </a>
+  <a class="nav-item" data-id="reuse-lib" href="#">
+    <span class="tdot dc"></span>Reuse Library
+  </a>
+  <a class="nav-item" data-id="ditaval" href="#">
+    <span class="tdot" style="background:#e91e8c"></span>DITAVAL Filters
+  </a>
+  <a class="nav-item" data-id="schematron" href="#">
+    <span class="tdot dw"></span>Schematron Rules
+  </a>
+
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main" id="main"></main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     TOPIC TEMPLATES
+═══════════════════════════════════════════════════ -->
+
+<template id="tpl-overview">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Getting Started</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-c">📘 Concept</div>
+    <h1 class="ttitle">PayPal REST API Overview</h1>
+    <div class="shortdesc">The PayPal REST API enables developers to accept payments, manage orders, process refunds, and handle subscriptions using a secure, standards-based OAuth 2.0 integration.</div>
+  </div>
+  <p>PayPal's REST API uses OAuth 2.0 for authentication, JSON for request and response bodies, and standard HTTP verbs. All requests must use HTTPS and target the versioned base URL for your environment.</p>
+  <h2>Key Capabilities</h2>
+  <ul>
+    <li>Accept PayPal wallet payments and credit/debit cards</li>
+    <li>Create and capture payment orders (v2/checkout/orders)</li>
+    <li>Issue full and partial refunds</li>
+    <li>Manage recurring billing and subscriptions</li>
+    <li>Receive real-time event notifications via webhooks</li>
+    <li>Support for 200+ countries and 25+ currencies</li>
+  </ul>
+  <h2>API Conventions</h2>
+  <table class="dtable">
+    <thead><tr><th>Convention</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Base URL (Live)</td><td><code>https://api-m.paypal.com</code></td></tr>
+      <tr><td>Base URL (Sandbox)</td><td><code>https://api-m.sandbox.paypal.com</code></td></tr>
+      <tr><td>Authentication</td><td>OAuth 2.0 client credentials — Bearer token</td></tr>
+      <tr><td>API Version</td><td>v2 for Orders and Payments; v1 for legacy endpoints</td></tr>
+      <tr><td>Request format</td><td><code>application/json</code></td></tr>
+      <tr><td>Currency amounts</td><td>String with 2 decimal places — e.g., <code>"10.00"</code></td></tr>
+      <tr><td>Currency codes</td><td>ISO 4217 — e.g., <code>USD</code>, <code>EUR</code>, <code>GBP</code></td></tr>
+      <tr><td>Idempotency</td><td><code>PayPal-Request-Id</code> header for safe POST retries</td></tr>
+    </tbody>
+  </table>
+  <h2>Environments</h2>
+  <table class="dtable">
+    <thead><tr><th>Environment</th><th>Base URL</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Sandbox</strong></td><td><code>https://api-m.sandbox.paypal.com</code></td><td>Development and testing — no real money</td></tr>
+      <tr><td><strong>Live</strong></td><td><code>https://api-m.paypal.com</code></td><td>Production payments with real funds</td></tr>
+    </tbody>
+  </table>
+  <div class="note note"><span class="note-icon">ℹ️</span><div><span class="note-lbl">Note</span>Sandbox and live environments use separate credentials. A sandbox <code>client_id</code> cannot authenticate against the live endpoint.</div></div>
+  <div class="rel-links">
+    <div class="rl-title">Related Topics</div>
+    <div class="rl-grid">
+      <div class="rl-item" onclick="show('quickstart')"><span class="rl-dot" style="background:#ffd140"></span>Quickstart<span class="rl-type">Task</span></div>
+      <div class="rl-item" onclick="show('authenticate')"><span class="rl-dot" style="background:#ffd140"></span>Authenticate with OAuth 2.0<span class="rl-type">Task</span></div>
+      <div class="rl-item" onclick="show('error-codes')"><span class="rl-dot" style="background:#f0a500"></span>Error Codes<span class="rl-type">Reference</span></div>
+    </div>
+  </div>
+  <div class="tnav"><span></span><div class="tn-btn" onclick="show('quickstart')"><span><span class="tn-lbl">Next</span>Quickstart →</span></div></div>
+</div>
+</template>
+
+<template id="tpl-quickstart">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Getting Started</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-t">✅ Task</div>
+    <h1 class="ttitle">Quickstart — Accept Your First PayPal Payment</h1>
+    <div class="shortdesc">Create a sandbox order and capture a payment end-to-end in under 15 minutes using the PayPal REST API and curl.</div>
+  </div>
+  <div class="prereq"><div class="prereq-lbl">Prerequisites</div><ul style="margin:0">
+    <li>A PayPal Developer account — sign up at <a href="https://developer.paypal.com" target="_blank">developer.paypal.com ↗</a></li>
+    <li>Sandbox <code>client_id</code> and <code>client_secret</code> from the Developer Dashboard</li>
+    <li>curl or Postman installed</li>
+  </ul></div>
+  <h2>Steps</h2>
+  <ol class="steps">
+    <li class="step-item"><span class="step-num">1</span><div class="step-body">
+      <div class="step-cmd">Log in to the Developer Dashboard and create a sandbox app.</div>
+      <div class="step-info">Navigate to <strong>My Apps &amp; Credentials → Sandbox → Create App</strong>. Copy the <code>client_id</code> and <code>client_secret</code>.</div>
+    </div></li>
+    <li class="step-item"><span class="step-num">2</span><div class="step-body">
+      <div class="step-cmd">Obtain an OAuth 2.0 access token.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">bash</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre><span class="cf">curl</span> -X POST https://api-m.sandbox.paypal.com/v1/oauth2/token \
+  -H <span class="cs">"Accept: application/json"</span> \
+  -u <span class="cs">"CLIENT_ID:CLIENT_SECRET"</span> \
+  -d <span class="cs">"grant_type=client_credentials"</span></pre></div></div>
+      <div class="step-result">Response contains <code>access_token</code> valid for 32400 seconds</div>
+    </div></li>
+    <li class="step-item"><span class="step-num">3</span><div class="step-body">
+      <div class="step-cmd">Create a payment order for $10.00 USD.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">bash</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre><span class="cf">curl</span> -X POST https://api-m.sandbox.paypal.com/v2/checkout/orders \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -H <span class="cs">"Authorization: Bearer ACCESS_TOKEN"</span> \
+  -H <span class="cs">"PayPal-Request-Id: order-quickstart-001"</span> \
+  -d <span class="cs">'{
+    "intent": "CAPTURE",
+    "purchase_units": [{
+      "amount": { "currency_code": "USD", "value": "10.00" }
+    }]
+  }'</span></pre></div></div>
+      <div class="step-result">Returns order <code>id</code> and status <code>CREATED</code></div>
+    </div></li>
+    <li class="step-item"><span class="step-num">4</span><div class="step-body">
+      <div class="step-cmd">Redirect the buyer to the PayPal approval URL.</div>
+      <div class="step-info">Parse <code>links[rel="approve"].href</code> from the response and redirect the buyer's browser there.</div>
+      <div class="step-result">Buyer approves — PayPal redirects back to your <code>return_url</code></div>
+    </div></li>
+    <li class="step-item"><span class="step-num">5</span><div class="step-body">
+      <div class="step-cmd">Capture the approved order to collect funds.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">bash</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre><span class="cf">curl</span> -X POST https://api-m.sandbox.paypal.com/v2/checkout/orders/<span class="co">ORDER_ID</span>/capture \
+  -H <span class="cs">"Authorization: Bearer ACCESS_TOKEN"</span></pre></div></div>
+      <div class="step-result">Status changes to <code>COMPLETED</code> — funds collected</div>
+    </div></li>
+  </ol>
+  <div class="result-box"><div class="result-lbl">Result</div>Your first PayPal payment is complete. Store the order <code>id</code> for refund or retrieval operations.</div>
+  <div class="postreq-box"><div class="postreq-lbl">Next Steps</div>See <a href="#" onclick="show('authenticate')">Authenticate with OAuth 2.0</a> for token management best practices.</div>
+  <div class="note tip"><span class="note-icon">💡</span><div><span class="note-lbl">Tip</span>Cache the access token for its full 9-hour lifespan. Generating a new token per request can trigger rate limits.</div></div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('overview')"><span><span class="tn-lbl">Previous</span>← API Overview</span></div>
+    <div class="tn-btn" onclick="show('authenticate')"><span><span class="tn-lbl">Next</span>Authenticate with OAuth 2.0 →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-authenticate">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Getting Started</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-t">✅ Task</div>
+    <h1 class="ttitle">Authenticate with OAuth 2.0</h1>
+    <div class="shortdesc">Obtain a Bearer access token using your PayPal app credentials to authorize REST API calls.</div>
+  </div>
+  <div class="prereq"><div class="prereq-lbl">Prerequisites</div><ul style="margin:0">
+    <li>A PayPal Developer account with at least one app created</li>
+    <li>Your app's <code>client_id</code> and <code>client_secret</code></li>
+  </ul></div>
+  <h2>Steps</h2>
+  <ol class="steps">
+    <li class="step-item"><span class="step-num">1</span><div class="step-body">
+      <div class="step-cmd">Send a POST request to the token endpoint using HTTP Basic Auth.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">bash</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre><span class="cf">curl</span> -X POST https://api-m.sandbox.paypal.com/v1/oauth2/token \
+  -H <span class="cs">"Accept: application/json"</span> \
+  -H <span class="cs">"Accept-Language: en_US"</span> \
+  -u <span class="cs">"AaBbCcDd_client_id:EeFfGgHh_client_secret"</span> \
+  -d <span class="cs">"grant_type=client_credentials"</span></pre></div></div>
+    </div></li>
+    <li class="step-item"><span class="step-num">2</span><div class="step-body">
+      <div class="step-cmd">Parse the <code>access_token</code> from the JSON response.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">json</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre>{
+  <span class="ck">"scope"</span>:        <span class="cs">"https://uri.paypal.com/services/invoicing ..."</span>,
+  <span class="ck">"access_token"</span>: <span class="cs">"A21AAFEpH4PsADbl..."</span>,
+  <span class="ck">"token_type"</span>:   <span class="cs">"Bearer"</span>,
+  <span class="ck">"app_id"</span>:       <span class="cs">"APP-80W284485P519543T"</span>,
+  <span class="ck">"expires_in"</span>:   <span class="cv">32400</span>,
+  <span class="ck">"nonce"</span>:        <span class="cs">"2024-09-15T10:30:42ZpN..."</span>
+}</pre></div></div>
+      <div class="step-result">Token valid for 32400 seconds (9 hours). Cache and reuse.</div>
+    </div></li>
+    <li class="step-item"><span class="step-num">3</span><div class="step-body">
+      <div class="step-cmd">Include the Bearer token in all subsequent API request headers.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">http</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre><span class="cf">Authorization</span>: Bearer A21AAFEpH4PsADbl...</pre></div></div>
+    </div></li>
+  </ol>
+  <div class="result-box"><div class="result-lbl">Result</div>All PayPal REST API endpoints are accessible with this token until it expires.</div>
+  <div class="postreq-box"><div class="postreq-lbl">Next Step</div>Proactively refresh the token 5 minutes before expiry. See <a href="#" onclick="show('error-codes')">Error Codes</a> for token-related failures.</div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('quickstart')"><span><span class="tn-lbl">Previous</span>← Quickstart</span></div>
+    <div class="tn-btn" onclick="show('sandbox')"><span><span class="tn-lbl">Next</span>Sandbox Testing →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-sandbox">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Getting Started</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-c">📘 Concept</div>
+    <h1 class="ttitle">Sandbox Testing</h1>
+    <div class="shortdesc">The PayPal Sandbox is a self-contained test environment that mirrors the live PayPal platform — no real money is ever moved.</div>
+  </div>
+  <p>Use the sandbox throughout development and QA. Sandbox accounts, credentials, and transactions are completely isolated from live data.</p>
+  <h2>Sandbox Account Types</h2>
+  <table class="dtable">
+    <thead><tr><th>Account Type</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td>Business (Facilitator)</td><td>Receives payments — maps to your merchant PayPal account</td></tr>
+      <tr><td>Personal (Buyer)</td><td>Makes payments — used to simulate buyer checkout flow</td></tr>
+    </tbody>
+  </table>
+  <h2>Test Credit Card Numbers</h2>
+  <table class="dtable">
+    <thead><tr><th>Card Type</th><th>Number</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Visa</td><td><code>4111111111111111</code></td><td>Any future expiry, any CVV</td></tr>
+      <tr><td>Mastercard</td><td><code>5500005555555559</code></td><td>Any future expiry, any CVV</td></tr>
+      <tr><td>Amex</td><td><code>378282246310005</code></td><td>4-digit CVV</td></tr>
+      <tr><td>Discover</td><td><code>6011111111111117</code></td><td>Any future expiry, any CVV</td></tr>
+    </tbody>
+  </table>
+  <h2>Simulating Error Scenarios</h2>
+  <table class="dtable">
+    <thead><tr><th>Amount (USD)</th><th>Simulated Outcome</th></tr></thead>
+    <tbody>
+      <tr><td><code>9.99</code></td><td>Instrument declined — simulates insufficient funds</td></tr>
+      <tr><td><code>4444.44</code></td><td>Processing error — simulates gateway failure</td></tr>
+      <tr><td><code>8888.88</code></td><td>Fraud detection triggered</td></tr>
+    </tbody>
+  </table>
+  <div class="note tip"><span class="note-icon">💡</span><div><span class="note-lbl">Tip</span>Create multiple sandbox buyer accounts with different funding sources (PayPal balance, bank account, credit card) to test the full range of payment scenarios before going live.</div></div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('authenticate')"><span><span class="tn-lbl">Previous</span>← Authenticate with OAuth 2.0</span></div>
+    <div class="tn-btn" onclick="show('orders-concept')"><span><span class="tn-lbl">Next</span>Orders API Overview →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-orders-concept">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Orders</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-c">📘 Concept</div>
+    <h1 class="ttitle">Orders API Overview</h1>
+    <div class="shortdesc">The PayPal Orders API (v2) is the recommended integration for accepting PayPal payments — supporting wallet, card, and alternative payment methods through a single unified flow.</div>
+  </div>
+  <p>An <em>order</em> represents a buyer's intent to purchase. The order lifecycle has three stages: Create, Approve, and Capture.</p>
+  <h2>Order Lifecycle</h2>
+  <table class="dtable">
+    <thead><tr><th>Stage</th><th>Status</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1. Create</strong></td><td><code>CREATED</code></td><td>Your server creates the order with item details and amount.</td></tr>
+      <tr><td><strong>2. Approve</strong></td><td><code>APPROVED</code></td><td>Buyer logs in to PayPal and approves the payment.</td></tr>
+      <tr><td><strong>3. Capture</strong></td><td><code>COMPLETED</code></td><td>Your server captures funds. Money moves to your account.</td></tr>
+    </tbody>
+  </table>
+  <h2>Payment Intent</h2>
+  <ul>
+    <li><strong>CAPTURE</strong> — Immediately collect funds when the buyer approves. Use for most standard checkouts.</li>
+    <li><strong>AUTHORIZE</strong> — Reserve funds for up to 29 days without collecting. Use when fulfillment is delayed (pre-orders, physical goods).</li>
+  </ul>
+  <h2>Purchase Units</h2>
+  <p>Each order contains one or more <code>purchase_units</code>. A purchase unit represents a payment to a single payee and includes:</p>
+  <ul>
+    <li>Amount (value and currency)</li>
+    <li>Optional item breakdown (items, shipping, tax, handling)</li>
+    <li>Shipping address</li>
+    <li>Custom reference ID for your records</li>
+    <li>Soft descriptor (appears on buyer's statement)</li>
+  </ul>
+  <div class="note note"><span class="note-icon">ℹ️</span><div><span class="note-lbl">Note</span>Multi-seller orders (multiple <code>purchase_units</code>) require PayPal Marketplace or Platform approval. Contact PayPal to enable this feature.</div></div>
+  <div class="rel-links">
+    <div class="rl-title">Related Topics</div>
+    <div class="rl-grid">
+      <div class="rl-item" onclick="show('create-order')"><span class="rl-dot" style="background:#ffd140"></span>Create a Payment Order<span class="rl-type">Task</span></div>
+      <div class="rl-item" onclick="show('capture-order')"><span class="rl-dot" style="background:#ffd140"></span>Capture a Payment Order<span class="rl-type">Task</span></div>
+      <div class="rl-item" onclick="show('order-object')"><span class="rl-dot" style="background:#f0a500"></span>Order Object<span class="rl-type">Reference</span></div>
+    </div>
+  </div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('sandbox')"><span><span class="tn-lbl">Previous</span>← Sandbox Testing</span></div>
+    <div class="tn-btn" onclick="show('create-order')"><span><span class="tn-lbl">Next</span>Create a Payment Order →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-create-order">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Orders</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-t">✅ Task</div>
+    <h1 class="ttitle">Create a Payment Order</h1>
+    <div class="shortdesc">Create a PayPal order to initiate the checkout flow and receive a buyer approval URL.</div>
+  </div>
+  <div class="prereq"><div class="prereq-lbl">Prerequisites</div><ul style="margin:0">
+    <li>A valid OAuth 2.0 Bearer token — see <a href="#" onclick="show('authenticate')">Authenticate with OAuth 2.0</a></li>
+    <li>Item details and total amount to charge the buyer</li>
+  </ul></div>
+  <h2>Steps</h2>
+  <ol class="steps">
+    <li class="step-item"><span class="step-num">1</span><div class="step-body">
+      <div class="step-cmd">Send a POST request to <code>/v2/checkout/orders</code>.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">bash</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre><span class="cf">curl</span> -X POST https://api-m.sandbox.paypal.com/v2/checkout/orders \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -H <span class="cs">"Authorization: Bearer A21AAFEpH4PsADbl..."</span> \
+  -H <span class="cs">"PayPal-Request-Id: order-20240915-001"</span> \
+  -d <span class="cs">'{
+    "intent": "CAPTURE",
+    "purchase_units": [{
+      "reference_id": "store-order-12345",
+      "description": "Camera &amp; accessories",
+      "amount": {
+        "currency_code": "USD",
+        "value": "220.00",
+        "breakdown": {
+          "item_total": { "currency_code": "USD", "value": "200.00" },
+          "shipping":   { "currency_code": "USD", "value": "20.00" }
+        }
+      },
+      "items": [{
+        "name": "Sony Alpha Camera",
+        "unit_amount": { "currency_code": "USD", "value": "200.00" },
+        "quantity": "1",
+        "category": "PHYSICAL_GOODS"
+      }]
+    }],
+    "application_context": {
+      "brand_name": "Acme Store",
+      "landing_page": "LOGIN",
+      "user_action": "PAY_NOW",
+      "return_url": "https://acme.com/checkout/success",
+      "cancel_url": "https://acme.com/checkout/cancel"
+    }
+  }'</span></pre></div></div>
+    </div></li>
+    <li class="step-item"><span class="step-num">2</span><div class="step-body">
+      <div class="step-cmd">Parse the order <code>id</code> and approval URL from the response.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">json</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre>{
+  <span class="ck">"id"</span>:     <span class="cs">"5O190127TN364715T"</span>,
+  <span class="ck">"status"</span>: <span class="cs">"CREATED"</span>,
+  <span class="ck">"links"</span>: [
+    { <span class="ck">"rel"</span>: <span class="cs">"self"</span>,    <span class="ck">"href"</span>: <span class="cs">"https://api-m.sandbox.paypal.com/v2/checkout/orders/5O190127TN364715T"</span>, <span class="ck">"method"</span>: <span class="cs">"GET"</span> },
+    { <span class="ck">"rel"</span>: <span class="cs">"approve"</span>, <span class="ck">"href"</span>: <span class="cs">"https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T"</span>, <span class="ck">"method"</span>: <span class="cs">"GET"</span> },
+    { <span class="ck">"rel"</span>: <span class="cs">"capture"</span>, <span class="ck">"href"</span>: <span class="cs">"https://api-m.sandbox.paypal.com/v2/checkout/orders/5O190127TN364715T/capture"</span>, <span class="ck">"method"</span>: <span class="cs">"POST"</span> }
+  ]
+}</pre></div></div>
+      <div class="step-result">Store order <code>id</code>. Redirect buyer to the <code>approve</code> link.</div>
+    </div></li>
+    <li class="step-item"><span class="step-num">3</span><div class="step-body">
+      <div class="step-cmd">Redirect the buyer to the PayPal approval page.</div>
+      <div class="step-info">Extract the link where <code>rel</code> equals <code>"approve"</code> and redirect the buyer's browser to that URL.</div>
+    </div></li>
+  </ol>
+  <div class="result-box"><div class="result-lbl">Result</div>Order created with status <code>CREATED</code>. After buyer approval, status becomes <code>APPROVED</code> and you can proceed to capture.</div>
+  <div class="postreq-box"><div class="postreq-lbl">Next Step</div>See <a href="#" onclick="show('capture-order')">Capture a Payment Order</a> to collect funds after buyer approval.</div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('orders-concept')"><span><span class="tn-lbl">Previous</span>← Orders API Overview</span></div>
+    <div class="tn-btn" onclick="show('capture-order')"><span><span class="tn-lbl">Next</span>Capture a Payment Order →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-capture-order">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Orders</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-t">✅ Task</div>
+    <h1 class="ttitle">Capture a Payment Order</h1>
+    <div class="shortdesc">Collect funds from a buyer-approved PayPal order to complete the transaction.</div>
+  </div>
+  <div class="prereq"><div class="prereq-lbl">Prerequisites</div><ul style="margin:0">
+    <li>An order with status <code>APPROVED</code></li>
+    <li>The order <code>id</code> returned when the order was created</li>
+    <li>A valid OAuth 2.0 Bearer token</li>
+  </ul></div>
+  <h2>Steps</h2>
+  <ol class="steps">
+    <li class="step-item"><span class="step-num">1</span><div class="step-body">
+      <div class="step-cmd">Confirm the order status is <code>APPROVED</code> before capturing.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">bash</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre><span class="cf">curl</span> https://api-m.sandbox.paypal.com/v2/checkout/orders/<span class="co">5O190127TN364715T</span> \
+  -H <span class="cs">"Authorization: Bearer A21AAFEpH4PsADbl..."</span></pre></div></div>
+      <div class="step-result">Verify <code>"status": "APPROVED"</code></div>
+    </div></li>
+    <li class="step-item"><span class="step-num">2</span><div class="step-body">
+      <div class="step-cmd">Send a POST request to the capture endpoint.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">bash</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre><span class="cf">curl</span> -X POST \
+  https://api-m.sandbox.paypal.com/v2/checkout/orders/<span class="co">5O190127TN364715T</span>/capture \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -H <span class="cs">"Authorization: Bearer A21AAFEpH4PsADbl..."</span> \
+  -H <span class="cs">"PayPal-Request-Id: capture-20240915-001"</span></pre></div></div>
+    </div></li>
+    <li class="step-item"><span class="step-num">3</span><div class="step-body">
+      <div class="step-cmd">Verify the response shows <code>"status": "COMPLETED"</code>.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">json</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre>{
+  <span class="ck">"id"</span>:     <span class="cs">"5O190127TN364715T"</span>,
+  <span class="ck">"status"</span>: <span class="cs">"COMPLETED"</span>,
+  <span class="ck">"purchase_units"</span>: [{
+    <span class="ck">"payments"</span>: {
+      <span class="ck">"captures"</span>: [{
+        <span class="ck">"id"</span>:            <span class="cs">"3C679366HH908993F"</span>,
+        <span class="ck">"status"</span>:        <span class="cs">"COMPLETED"</span>,
+        <span class="ck">"amount"</span>:        { <span class="ck">"currency_code"</span>: <span class="cs">"USD"</span>, <span class="ck">"value"</span>: <span class="cs">"220.00"</span> },
+        <span class="ck">"final_capture"</span>: <span class="cm">true</span>,
+        <span class="ck">"seller_protection"</span>: { <span class="ck">"status"</span>: <span class="cs">"ELIGIBLE"</span> }
+      }]
+    }
+  }]
+}</pre></div></div>
+      <div class="step-result">Funds collected. Store capture <code>id</code> <code>3C679366HH908993F</code> for refunds.</div>
+    </div></li>
+  </ol>
+  <div class="result-box"><div class="result-lbl">Result</div>Payment complete. Funds transferred to your PayPal account within your payout schedule.</div>
+  <div class="postreq-box"><div class="postreq-lbl">Next Step</div>To return funds to the buyer, see <a href="#" onclick="show('refund-payment')">Refund a Payment</a>.</div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('create-order')"><span><span class="tn-lbl">Previous</span>← Create a Payment Order</span></div>
+    <div class="tn-btn" onclick="show('payments-concept')"><span><span class="tn-lbl">Next</span>Payments API Overview →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-payments-concept">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Payments</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-c">📘 Concept</div>
+    <h1 class="ttitle">Payments API Overview</h1>
+    <div class="shortdesc">The PayPal Payments API handles captures, refunds, and authorizations on existing payment transactions created through the Orders API.</div>
+  </div>
+  <p>The Payments API (v2) operates on <em>captures</em> and <em>authorizations</em> created as part of the Orders workflow. Use it to issue refunds, void authorizations, or retrieve transaction details.</p>
+  <h2>Captures vs Authorizations</h2>
+  <table class="dtable">
+    <thead><tr><th>Type</th><th>When to Use</th><th>Expiry</th></tr></thead>
+    <tbody>
+      <tr><td>Capture</td><td>Immediate payment collection (CAPTURE intent)</td><td>Permanent — refund to reverse</td></tr>
+      <tr><td>Authorization</td><td>Reserve funds, collect later (AUTHORIZE intent)</td><td>29 days; void or re-authorize</td></tr>
+    </tbody>
+  </table>
+  <h2>Refund Types</h2>
+  <ul>
+    <li><strong>Full refund</strong> — Returns the entire captured amount to the buyer.</li>
+    <li><strong>Partial refund</strong> — Returns a specific amount less than the capture. Multiple partial refunds are allowed until the full amount is refunded.</li>
+  </ul>
+  <h2>Refund Processing Timeline</h2>
+  <table class="dtable">
+    <thead><tr><th>Funding Source</th><th>Processing Time</th></tr></thead>
+    <tbody>
+      <tr><td>PayPal balance</td><td>Instant</td></tr>
+      <tr><td>Credit / debit card</td><td>3–5 business days</td></tr>
+      <tr><td>Bank account</td><td>3–5 business days</td></tr>
+      <tr><td>PayPal Credit</td><td>Up to 30 days</td></tr>
+    </tbody>
+  </table>
+  <div class="note warning"><span class="note-icon">⚠️</span><div><span class="note-lbl">Warning</span>Refunds must be issued within 180 days of the original capture. After 180 days you must process the refund outside PayPal.</div></div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('capture-order')"><span><span class="tn-lbl">Previous</span>← Capture a Payment Order</span></div>
+    <div class="tn-btn" onclick="show('capture-payment')"><span><span class="tn-lbl">Next</span>Capture a Payment →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-capture-payment">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Payments</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-t">✅ Task</div>
+    <h1 class="ttitle">Capture a Payment</h1>
+    <div class="shortdesc">Capture funds from an authorized PayPal payment using the Payments API.</div>
+  </div>
+  <div class="prereq"><div class="prereq-lbl">Prerequisites</div><ul style="margin:0">
+    <li>An order created with <code>"intent": "AUTHORIZE"</code> and status <code>APPROVED</code></li>
+    <li>The authorization <code>id</code> from the order response</li>
+    <li>A valid Bearer token</li>
+  </ul></div>
+  <h2>Steps</h2>
+  <ol class="steps">
+    <li class="step-item"><span class="step-num">1</span><div class="step-body">
+      <div class="step-cmd">Retrieve the authorization ID from the approved order.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">bash</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre><span class="cf">curl</span> https://api-m.sandbox.paypal.com/v2/checkout/orders/<span class="co">ORDER_ID</span> \
+  -H <span class="cs">"Authorization: Bearer A21AAFEpH4PsADbl..."</span></pre></div></div>
+      <div class="step-result">Parse <code>purchase_units[0].payments.authorizations[0].id</code></div>
+    </div></li>
+    <li class="step-item"><span class="step-num">2</span><div class="step-body">
+      <div class="step-cmd">Capture the authorization to collect funds.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">bash</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre><span class="cf">curl</span> -X POST \
+  https://api-m.sandbox.paypal.com/v2/payments/authorizations/<span class="co">AUTH_ID</span>/capture \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -H <span class="cs">"Authorization: Bearer A21AAFEpH4PsADbl..."</span> \
+  -H <span class="cs">"PayPal-Request-Id: capture-auth-001"</span> \
+  -d <span class="cs">'{
+    "amount": { "currency_code": "USD", "value": "220.00" },
+    "final_capture": true,
+    "invoice_id": "INV-12345"
+  }'</span></pre></div></div>
+      <div class="step-result">Response status <code>COMPLETED</code> — funds collected</div>
+    </div></li>
+  </ol>
+  <div class="result-box"><div class="result-lbl">Result</div>Authorization captured. Funds move to your PayPal account.</div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('payments-concept')"><span><span class="tn-lbl">Previous</span>← Payments API Overview</span></div>
+    <div class="tn-btn" onclick="show('refund-payment')"><span><span class="tn-lbl">Next</span>Refund a Payment →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-refund-payment">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Payments</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-t">✅ Task</div>
+    <h1 class="ttitle">Refund a Payment</h1>
+    <div class="shortdesc">Return funds to a buyer for a completed PayPal capture — full or partial.</div>
+  </div>
+  <div class="prereq"><div class="prereq-lbl">Prerequisites</div><ul style="margin:0">
+    <li>A capture with status <code>COMPLETED</code></li>
+    <li>The capture <code>id</code> (e.g., <code>3C679366HH908993F</code>)</li>
+    <li>Transaction within 180 days of capture date</li>
+  </ul></div>
+  <h2>Steps</h2>
+  <ol class="steps">
+    <li class="step-item"><span class="step-num">1</span><div class="step-body">
+      <div class="step-cmd">Send a POST request to the refund endpoint.</div>
+      <p style="font-size:13.5px;color:#3a5570;margin:6px 0 4px"><strong>Full refund</strong> — omit the <code>amount</code> field:</p>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">bash</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre><span class="cf">curl</span> -X POST \
+  https://api-m.sandbox.paypal.com/v2/payments/captures/<span class="co">3C679366HH908993F</span>/refund \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -H <span class="cs">"Authorization: Bearer A21AAFEpH4PsADbl..."</span> \
+  -H <span class="cs">"PayPal-Request-Id: refund-20240915-001"</span> \
+  -d <span class="cs">'{ "note_to_payer": "Refund for order cancellation" }'</span></pre></div></div>
+      <p style="font-size:13.5px;color:#3a5570;margin:10px 0 4px"><strong>Partial refund</strong> — include the amount:</p>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">bash</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre><span class="cf">curl</span> -X POST \
+  https://api-m.sandbox.paypal.com/v2/payments/captures/<span class="co">3C679366HH908993F</span>/refund \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -H <span class="cs">"Authorization: Bearer A21AAFEpH4PsADbl..."</span> \
+  -H <span class="cs">"PayPal-Request-Id: refund-partial-001"</span> \
+  -d <span class="cs">'{
+    "amount": { "currency_code": "USD", "value": "20.00" },
+    "invoice_id": "REFUND-INV-001",
+    "note_to_payer": "Partial refund for returned item"
+  }'</span></pre></div></div>
+    </div></li>
+    <li class="step-item"><span class="step-num">2</span><div class="step-body">
+      <div class="step-cmd">Verify the response status is <code>COMPLETED</code>.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">json</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre>{
+  <span class="ck">"id"</span>:     <span class="cs">"1JU08902781691046"</span>,
+  <span class="ck">"status"</span>: <span class="cs">"COMPLETED"</span>,
+  <span class="ck">"amount"</span>: { <span class="ck">"currency_code"</span>: <span class="cs">"USD"</span>, <span class="ck">"value"</span>: <span class="cs">"20.00"</span> },
+  <span class="ck">"seller_payable_breakdown"</span>: {
+    <span class="ck">"gross_amount"</span>:         { <span class="ck">"currency_code"</span>: <span class="cs">"USD"</span>, <span class="ck">"value"</span>: <span class="cs">"20.00"</span> },
+    <span class="ck">"total_refunded_amount"</span>: { <span class="ck">"currency_code"</span>: <span class="cs">"USD"</span>, <span class="ck">"value"</span>: <span class="cs">"20.00"</span> }
+  },
+  <span class="ck">"create_time"</span>: <span class="cs">"2024-09-15T11:00:00Z"</span>
+}</pre></div></div>
+      <div class="step-result">Refund initiated — buyer receives email confirmation</div>
+    </div></li>
+  </ol>
+  <div class="note note"><span class="note-icon">ℹ️</span><div><span class="note-lbl">Note</span>The PayPal fee from the original transaction is returned to you when you issue a full refund. Partial refunds do not return the fee proportionally.</div></div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('capture-payment')"><span><span class="tn-lbl">Previous</span>← Capture a Payment</span></div>
+    <div class="tn-btn" onclick="show('webhooks-concept')"><span><span class="tn-lbl">Next</span>Webhooks Overview →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-webhooks-concept">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Webhooks</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-w">🔔 Concept</div>
+    <h1 class="ttitle">Webhooks Overview</h1>
+    <div class="shortdesc">PayPal webhooks deliver real-time event notifications to your server when payment activities occur — eliminating the need to poll the API.</div>
+  </div>
+  <p>A webhook is an HTTPS POST request that PayPal sends to your endpoint URL when a subscribed event occurs. Your endpoint must return HTTP <code>200</code> within 10 seconds or PayPal will retry.</p>
+  <h2>Key Webhook Event Types</h2>
+  <table class="dtable">
+    <thead><tr><th>Event Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>CHECKOUT.ORDER.APPROVED</code></td><td>Buyer approved the order — ready to capture</td></tr>
+      <tr><td><code>PAYMENT.CAPTURE.COMPLETED</code></td><td>Capture succeeded — funds collected</td></tr>
+      <tr><td><code>PAYMENT.CAPTURE.DENIED</code></td><td>Capture failed — buyer's payment declined</td></tr>
+      <tr><td><code>PAYMENT.CAPTURE.REFUNDED</code></td><td>Refund processed for a capture</td></tr>
+      <tr><td><code>PAYMENT.AUTHORIZATION.VOIDED</code></td><td>Authorization was voided before capture</td></tr>
+      <tr><td><code>CUSTOMER.DISPUTE.CREATED</code></td><td>Buyer opened a dispute or chargeback</td></tr>
+      <tr><td><code>BILLING.SUBSCRIPTION.ACTIVATED</code></td><td>Subscription became active</td></tr>
+    </tbody>
+  </table>
+  <h2>Webhook Payload Structure</h2>
+  <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">json</span><button class="cb-copy">Copy</button></div>
+  <div class="cb-body"><pre>{
+  <span class="ck">"id"</span>:            <span class="cs">"WH-82F81145PK519990L-9BM123456789"</span>,
+  <span class="ck">"event_version"</span>: <span class="cs">"1.0"</span>,
+  <span class="ck">"create_time"</span>:   <span class="cs">"2024-09-15T10:35:00Z"</span>,
+  <span class="ck">"resource_type"</span>: <span class="cs">"capture"</span>,
+  <span class="ck">"event_type"</span>:    <span class="cs">"PAYMENT.CAPTURE.COMPLETED"</span>,
+  <span class="ck">"summary"</span>:       <span class="cs">"Payment completed for $ 220.00 USD"</span>,
+  <span class="ck">"resource"</span>: {
+    <span class="ck">"id"</span>:     <span class="cs">"3C679366HH908993F"</span>,
+    <span class="ck">"status"</span>: <span class="cs">"COMPLETED"</span>,
+    <span class="ck">"amount"</span>: { <span class="ck">"currency_code"</span>: <span class="cs">"USD"</span>, <span class="ck">"value"</span>: <span class="cs">"220.00"</span> }
+  }
+}</pre></div></div>
+  <div class="note warning"><span class="note-icon">⚠️</span><div><span class="note-lbl">Warning</span>Never process a webhook event without first verifying the signature. Unverified webhooks can be spoofed, leading to fraudulent order processing.</div></div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('refund-payment')"><span><span class="tn-lbl">Previous</span>← Refund a Payment</span></div>
+    <div class="tn-btn" onclick="show('register-webhook')"><span><span class="tn-lbl">Next</span>Register a Webhook →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-register-webhook">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Webhooks</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-t">✅ Task</div>
+    <h1 class="ttitle">Register a Webhook</h1>
+    <div class="shortdesc">Subscribe your HTTPS endpoint to receive real-time PayPal event notifications.</div>
+  </div>
+  <div class="prereq"><div class="prereq-lbl">Prerequisites</div><ul style="margin:0">
+    <li>A publicly accessible HTTPS endpoint (not localhost)</li>
+    <li>SSL/TLS certificate from a trusted Certificate Authority</li>
+    <li>A valid Bearer token with webhook management permissions</li>
+  </ul></div>
+  <h2>Steps</h2>
+  <ol class="steps">
+    <li class="step-item"><span class="step-num">1</span><div class="step-body">
+      <div class="step-cmd">Create the webhook subscription.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">bash</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre><span class="cf">curl</span> -X POST https://api-m.sandbox.paypal.com/v1/notifications/webhooks \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -H <span class="cs">"Authorization: Bearer A21AAFEpH4PsADbl..."</span> \
+  -d <span class="cs">'{
+    "url": "https://your-domain.com/paypal/webhook",
+    "event_types": [
+      { "name": "CHECKOUT.ORDER.APPROVED" },
+      { "name": "PAYMENT.CAPTURE.COMPLETED" },
+      { "name": "PAYMENT.CAPTURE.DENIED" },
+      { "name": "PAYMENT.CAPTURE.REFUNDED" },
+      { "name": "CUSTOMER.DISPUTE.CREATED" }
+    ]
+  }'</span></pre></div></div>
+      <div class="step-result">Response returns webhook <code>id</code> — store it for signature verification</div>
+    </div></li>
+    <li class="step-item"><span class="step-num">2</span><div class="step-body">
+      <div class="step-cmd">Verify incoming webhook signatures before processing events.</div>
+      <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">bash</span><button class="cb-copy">Copy</button></div>
+      <div class="cb-body"><pre><span class="cf">curl</span> -X POST \
+  https://api-m.sandbox.paypal.com/v1/notifications/verify-webhook-signature \
+  -H <span class="cs">"Authorization: Bearer A21AAFEpH4PsADbl..."</span> \
+  -d <span class="cs">'{
+    "transmission_id":   "PAYPAL-TRANSMISSION-ID header",
+    "transmission_time": "PAYPAL-TRANSMISSION-TIME header",
+    "cert_url":          "PAYPAL-CERT-URL header",
+    "auth_algo":         "PAYPAL-AUTH-ALGO header",
+    "transmission_sig":  "PAYPAL-TRANSMISSION-SIG header",
+    "webhook_id":        "5TH26290RN9719702",
+    "webhook_event":     { "...event body..." }
+  }'</span></pre></div></div>
+      <div class="step-result"><code>"verification_status": "SUCCESS"</code> confirms authenticity</div>
+    </div></li>
+    <li class="step-item"><span class="step-num">3</span><div class="step-body">
+      <div class="step-cmd">Return HTTP <code>200 OK</code> from your endpoint after processing.</div>
+      <div class="step-info">PayPal retries delivery up to 5 times with exponential backoff if your endpoint returns non-200 or times out (10 second timeout).</div>
+    </div></li>
+  </ol>
+  <div class="result-box"><div class="result-lbl">Result</div>Webhook registered. PayPal will POST events to your URL for all subscribed event types.</div>
+  <div class="note tip"><span class="note-icon">💡</span><div><span class="note-lbl">Tip</span>Use the PayPal Developer Dashboard to send test webhook events without completing a real transaction. Navigate to <strong>Webhooks → Simulate</strong>.</div></div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('webhooks-concept')"><span><span class="tn-lbl">Previous</span>← Webhooks Overview</span></div>
+    <div class="tn-btn" onclick="show('order-object')"><span><span class="tn-lbl">Next</span>Order Object →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-order-object">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>API Reference</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-r">📙 Reference</div>
+    <h1 class="ttitle">Order Object</h1>
+    <div class="shortdesc">Fields of the PayPal Order object returned by the v2/checkout/orders endpoints.</div>
+  </div>
+  <h2>Top-Level Fields</h2>
+  <table class="proptable">
+    <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td class="pf">id</td><td class="pt">string</td><td class="pd">Unique PayPal-generated order ID (e.g., <code>5O190127TN364715T</code>).</td></tr>
+      <tr><td class="pf">intent</td><td class="pt">enum</td><td class="pd"><code>CAPTURE</code> or <code>AUTHORIZE</code>. Set at order creation.</td></tr>
+      <tr><td class="pf">status</td><td class="pt">enum</td><td class="pd"><code>CREATED</code> · <code>SAVED</code> · <code>APPROVED</code> · <code>VOIDED</code> · <code>COMPLETED</code> · <code>PAYER_ACTION_REQUIRED</code></td></tr>
+      <tr><td class="pf">purchase_units</td><td class="pt">array</td><td class="pd">Array of purchase unit objects. Each represents a payment to one payee.</td></tr>
+      <tr><td class="pf">payer</td><td class="pt">object</td><td class="pd">Buyer information — populated after approval. Includes name, email, payer ID.</td></tr>
+      <tr><td class="pf">application_context</td><td class="pt">object</td><td class="pd">Customizes buyer experience: brand name, landing page, return/cancel URLs.</td></tr>
+      <tr><td class="pf">create_time</td><td class="pt">string</td><td class="pd">ISO 8601 UTC timestamp of order creation.</td></tr>
+      <tr><td class="pf">update_time</td><td class="pt">string</td><td class="pd">ISO 8601 UTC timestamp of last update.</td></tr>
+      <tr><td class="pf">links</td><td class="pt">array</td><td class="pd">HATEOAS links — self, approve, capture, authorize relevant to current state.</td></tr>
+    </tbody>
+  </table>
+  <h2>Purchase Unit Fields</h2>
+  <table class="proptable">
+    <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td class="pf">reference_id</td><td class="pt">string</td><td class="pd">Your internal reference (max 256 chars).</td></tr>
+      <tr><td class="pf">amount</td><td class="pt">object</td><td class="pd">Total with <code>currency_code</code> (ISO 4217) and <code>value</code> (string, 2 decimal places).</td></tr>
+      <tr><td class="pf">description</td><td class="pt">string</td><td class="pd">Optional description shown to buyer (max 127 chars).</td></tr>
+      <tr><td class="pf">items</td><td class="pt">array</td><td class="pd">Line items — name, unit_amount, quantity, category, SKU.</td></tr>
+      <tr><td class="pf">shipping</td><td class="pt">object</td><td class="pd">Shipping address and method for physical goods.</td></tr>
+      <tr><td class="pf">payments</td><td class="pt">object</td><td class="pd">Contains <code>captures</code> and/or <code>authorizations</code> arrays — populated after payment.</td></tr>
+    </tbody>
+  </table>
+  <h2>Related Endpoints</h2>
+  <ul>
+    <li><code>POST /v2/checkout/orders</code> — Create order</li>
+    <li><code>GET /v2/checkout/orders/{id}</code> — Get order details</li>
+    <li><code>PATCH /v2/checkout/orders/{id}</code> — Update order (before approval)</li>
+    <li><code>POST /v2/checkout/orders/{id}/capture</code> — Capture approved order</li>
+    <li><code>POST /v2/checkout/orders/{id}/authorize</code> — Authorize approved order</li>
+  </ul>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('register-webhook')"><span><span class="tn-lbl">Previous</span>← Register a Webhook</span></div>
+    <div class="tn-btn" onclick="show('payment-object')"><span><span class="tn-lbl">Next</span>Payment Object →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-payment-object">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>API Reference</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-r">📙 Reference</div>
+    <h1 class="ttitle">Payment Object</h1>
+    <div class="shortdesc">Fields of the PayPal Capture and Refund objects returned by the v2/payments endpoints.</div>
+  </div>
+  <h2>Capture Object Fields</h2>
+  <table class="proptable">
+    <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td class="pf">id</td><td class="pt">string</td><td class="pd">Unique capture ID (e.g., <code>3C679366HH908993F</code>). Use to issue refunds.</td></tr>
+      <tr><td class="pf">status</td><td class="pt">enum</td><td class="pd"><code>COMPLETED</code> · <code>DECLINED</code> · <code>PARTIALLY_REFUNDED</code> · <code>PENDING</code> · <code>REFUNDED</code></td></tr>
+      <tr><td class="pf">amount</td><td class="pt">object</td><td class="pd">Captured amount with <code>currency_code</code> and <code>value</code>.</td></tr>
+      <tr><td class="pf">final_capture</td><td class="pt">boolean</td><td class="pd"><code>true</code> if no further captures are allowed on this authorization.</td></tr>
+      <tr><td class="pf">seller_protection</td><td class="pt">object</td><td class="pd">Status: <code>ELIGIBLE</code>, <code>PARTIALLY_ELIGIBLE</code>, or <code>NOT_ELIGIBLE</code>. Includes dispute coverage categories.</td></tr>
+      <tr><td class="pf">invoice_id</td><td class="pt">string</td><td class="pd">Your invoice ID associated with this capture (max 127 chars).</td></tr>
+      <tr><td class="pf">create_time</td><td class="pt">string</td><td class="pd">ISO 8601 UTC timestamp of capture creation.</td></tr>
+    </tbody>
+  </table>
+  <h2>Refund Object Fields</h2>
+  <table class="proptable">
+    <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td class="pf">id</td><td class="pt">string</td><td class="pd">Unique refund ID (e.g., <code>1JU08902781691046</code>).</td></tr>
+      <tr><td class="pf">status</td><td class="pt">enum</td><td class="pd"><code>CANCELLED</code> · <code>FAILED</code> · <code>PENDING</code> · <code>COMPLETED</code></td></tr>
+      <tr><td class="pf">amount</td><td class="pt">object</td><td class="pd">Refund amount with <code>currency_code</code> and <code>value</code>.</td></tr>
+      <tr><td class="pf">seller_payable_breakdown</td><td class="pt">object</td><td class="pd">Breakdown of gross amount, PayPal fee returned, net amount, and total refunded.</td></tr>
+      <tr><td class="pf">note</td><td class="pt">string</td><td class="pd">Refund note shown to buyer (max 255 chars).</td></tr>
+      <tr><td class="pf">invoice_id</td><td class="pt">string</td><td class="pd">Invoice ID associated with the refund.</td></tr>
+    </tbody>
+  </table>
+  <h2>Related Endpoints</h2>
+  <ul>
+    <li><code>POST /v2/payments/authorizations/{id}/capture</code> — Capture authorization</li>
+    <li><code>GET /v2/payments/captures/{id}</code> — Get capture details</li>
+    <li><code>POST /v2/payments/captures/{id}/refund</code> — Refund capture</li>
+    <li><code>GET /v2/payments/refunds/{id}</code> — Get refund details</li>
+    <li><code>POST /v2/payments/authorizations/{id}/void</code> — Void authorization</li>
+  </ul>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('order-object')"><span><span class="tn-lbl">Previous</span>← Order Object</span></div>
+    <div class="tn-btn" onclick="show('error-codes')"><span><span class="tn-lbl">Next</span>Error Codes →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-error-codes">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>API Reference</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-s">⚠️ Reference</div>
+    <h1 class="ttitle">Error Codes</h1>
+    <div class="shortdesc">HTTP status codes and PayPal error identifiers returned by the REST API, with resolution guidance.</div>
+  </div>
+  <p>All PayPal API errors return a consistent JSON body:</p>
+  <div class="codeblock"><div class="cb-hdr"><span class="cb-lang">json</span><button class="cb-copy">Copy</button></div>
+  <div class="cb-body"><pre>{
+  <span class="ck">"name"</span>:     <span class="cs">"UNPROCESSABLE_ENTITY"</span>,
+  <span class="ck">"message"</span>:  <span class="cs">"The requested action could not be performed."</span>,
+  <span class="ck">"debug_id"</span>: <span class="cs">"c9a6c7d7f9fba"</span>,
+  <span class="ck">"details"</span>: [{
+    <span class="ck">"field"</span>:       <span class="cs">"/purchase_units/amount/value"</span>,
+    <span class="ck">"issue"</span>:       <span class="cs">"INVALID_PARAMETER_VALUE"</span>,
+    <span class="ck">"description"</span>: <span class="cs">"The value of the field is invalid."</span>
+  }]
+}</pre></div></div>
+  <h2>4xx Client Errors</h2>
+  <table class="errtable">
+    <thead><tr><th>HTTP</th><th>Error Name</th><th>Resolution</th></tr></thead>
+    <tbody>
+      <tr><td class="ehttp">400</td><td class="ecode">INVALID_REQUEST</td><td class="edesc">Malformed JSON or missing required field. Check the request body schema.</td></tr>
+      <tr><td class="ehttp">400</td><td class="ecode">INVALID_PARAMETER_VALUE</td><td class="edesc">Field value out of allowed range or wrong format (e.g., negative amount string).</td></tr>
+      <tr><td class="ehttp">401</td><td class="ecode">AUTHENTICATION_FAILURE</td><td class="edesc">Invalid or expired access token. Refresh via <code>POST /v1/oauth2/token</code>.</td></tr>
+      <tr><td class="ehttp">403</td><td class="ecode">NOT_AUTHORIZED</td><td class="edesc">App lacks permission for this action. Check feature entitlements in Dashboard.</td></tr>
+      <tr><td class="ehttp">404</td><td class="ecode">RESOURCE_NOT_FOUND</td><td class="edesc">Order or capture ID does not exist or belongs to a different environment.</td></tr>
+      <tr><td class="ehttp">409</td><td class="ecode">DUPLICATE_REQUEST_ID</td><td class="edesc"><code>PayPal-Request-Id</code> reused with a different body. Use unique ID per operation.</td></tr>
+      <tr><td class="ehttp">422</td><td class="ecode">ORDER_NOT_APPROVED</td><td class="edesc">Cannot capture — buyer has not approved the order yet.</td></tr>
+      <tr><td class="ehttp">422</td><td class="ecode">INSTRUMENT_DECLINED</td><td class="edesc">Buyer's payment method declined. Prompt buyer to use a different method.</td></tr>
+      <tr><td class="ehttp">429</td><td class="ecode">RATE_LIMIT_REACHED</td><td class="edesc">Too many requests. Implement exponential backoff. Check <code>Retry-After</code>.</td></tr>
+    </tbody>
+  </table>
+  <h2>5xx Server Errors</h2>
+  <table class="errtable">
+    <thead><tr><th>HTTP</th><th>Error Name</th><th>Resolution</th></tr></thead>
+    <tbody>
+      <tr><td class="ehttp">500</td><td class="ecode">INTERNAL_SERVER_ERROR</td><td class="edesc">Unexpected PayPal error. Retry with exponential backoff. Note the <code>debug_id</code>.</td></tr>
+      <tr><td class="ehttp">503</td><td class="ecode">SERVICE_UNAVAILABLE</td><td class="edesc">PayPal maintenance. Check <a href="https://www.paypaldeveloper.com/status" target="_blank">PayPal Status ↗</a>.</td></tr>
+    </tbody>
+  </table>
+  <div class="note tip"><span class="note-icon">💡</span><div><span class="note-lbl">Tip</span>Always log the <code>debug_id</code> from error responses. Include it when contacting PayPal Developer Support to enable rapid root-cause analysis.</div></div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('payment-object')"><span><span class="tn-lbl">Previous</span>← Payment Object</span></div>
+    <div class="tn-btn" onclick="show('dita-map')"><span><span class="tn-lbl">Next</span>DITA Map →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-dita-map">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Source Files</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-m">🗺 DITA Map</div>
+    <h1 class="ttitle">paypal-developer-guide.ditamap</h1>
+    <div class="shortdesc">The DITA map defines topic hierarchy, key definitions, and the relationship table for auto-generated related links.</div>
+  </div>
+  <h2>Key Definitions</h2>
+  <div class="maptree"><div class="mt-hdr">keydef elements — variable text managed in one place</div><div class="mt-body">
+    <div class="mt-item kd">🔑 product-name → <strong>PayPal</strong></div>
+    <div class="mt-item kd">🔑 api-base-url → <strong>https://api-m.paypal.com</strong></div>
+    <div class="mt-item kd">🔑 sandbox-url → <strong>https://api-m.sandbox.paypal.com</strong></div>
+    <div class="mt-item kd">🔑 support-email → <strong>developer-support@paypal.com</strong></div>
+    <div class="mt-item kd">🔑 api-version → <strong>v2</strong></div>
+  </div></div>
+  <h2>Topic Hierarchy</h2>
+  <div class="maptree"><div class="mt-hdr">paypal-developer-guide.ditamap</div><div class="mt-body">
+    <div class="mt-item chap">📂 Chapter 1 — Getting Started</div>
+    <div class="mt-item mt1" onclick="show('overview')">📄 overview.dita <span class="ttag tag-c">C</span></div>
+    <div class="mt-item mt2" onclick="show('quickstart')">📄 quickstart.dita <span class="ttag tag-t">T</span></div>
+    <div class="mt-item mt2" onclick="show('authenticate')">📄 authenticate.dita <span class="ttag tag-t">T</span></div>
+    <div class="mt-item mt2" onclick="show('sandbox')">📄 sandbox-testing.dita <span class="ttag tag-c">C</span></div>
+    <div class="mt-item chap">📂 Chapter 2 — Orders</div>
+    <div class="mt-item mt1" onclick="show('orders-concept')">📄 orders-concept.dita <span class="ttag tag-c">C</span></div>
+    <div class="mt-item mt2" onclick="show('create-order')">📄 create-order.dita <span class="ttag tag-t">T</span></div>
+    <div class="mt-item mt2" onclick="show('capture-order')">📄 capture-order.dita <span class="ttag tag-t">T</span></div>
+    <div class="mt-item chap">📂 Chapter 3 — Payments</div>
+    <div class="mt-item mt1" onclick="show('payments-concept')">📄 payments-concept.dita <span class="ttag tag-c">C</span></div>
+    <div class="mt-item mt2" onclick="show('capture-payment')">📄 create-payment.dita <span class="ttag tag-t">T</span></div>
+    <div class="mt-item mt2" onclick="show('refund-payment')">📄 refund-payment.dita <span class="ttag tag-t">T</span></div>
+    <div class="mt-item chap">📂 Chapter 4 — Webhooks</div>
+    <div class="mt-item mt1" onclick="show('webhooks-concept')">📄 webhooks-concept.dita <span class="ttag tag-c">C</span></div>
+    <div class="mt-item mt2" onclick="show('register-webhook')">📄 register-webhook.dita <span class="ttag tag-t">T</span></div>
+    <div class="mt-item chap">📂 Chapter 5 — Reference</div>
+    <div class="mt-item mt1" onclick="show('order-object')">📄 order-object.dita <span class="ttag tag-r">R</span></div>
+    <div class="mt-item mt1" onclick="show('payment-object')">📄 payment-object.dita <span class="ttag tag-r">R</span></div>
+    <div class="mt-item mt1" onclick="show('error-codes')">📄 error-codes.dita <span class="ttag tag-r">R</span></div>
+    <div class="mt-item" style="color:#6b7280;font-style:italic;padding-left:16px">📄 reuse-library.dita <span style="font-size:10.5px;color:#9ca3af;margin-left:6px">processing-role="resource-only"</span></div>
+    <div class="mt-item rt">🔗 reltable — 3 rows generating auto Related Links</div>
+  </div></div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('error-codes')"><span><span class="tn-lbl">Previous</span>← Error Codes</span></div>
+    <div class="tn-btn" onclick="show('reuse-lib')"><span><span class="tn-lbl">Next</span>Reuse Library →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-reuse-lib">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Source Files</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-c">📘 Reuse Library</div>
+    <h1 class="ttitle">reuse-library.dita</h1>
+    <div class="shortdesc">Shared content elements referenced by other topics via conref. Excluded from the output TOC with processing-role="resource-only".</div>
+  </div>
+  <div class="note tip"><span class="note-icon">💡</span><div><span class="note-lbl">DITA Note</span>This file is a <strong>conref warehouse</strong>. Elements here are pulled into other topics by their <code>@id</code> via <code>conref</code> or <code>conkeyref</code>. It does not appear in the published navigation.</div></div>
+  <h2>Shared Elements</h2>
+  <div style="border:1px solid var(--pp-border);border-radius:12px;margin:14px 0;overflow:hidden">
+    <div style="background:var(--pp-surf2);padding:9px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--pp-purple);border-bottom:1px solid var(--pp-border)">id="sandbox-warning" — used in: overview.dita, authenticate.dita</div>
+    <div style="padding:12px 16px"><div class="note warning" style="margin:0"><span class="note-icon">⚠️</span><div><span class="note-lbl">Warning</span>Sandbox and live credentials are separate. Never use live credentials in sandbox API calls or vice versa.</div></div></div>
+  </div>
+  <div style="border:1px solid var(--pp-border);border-radius:12px;margin:14px 0;overflow:hidden">
+    <div style="background:var(--pp-surf2);padding:9px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--pp-purple);border-bottom:1px solid var(--pp-border)">id="request-id-note" — used in: create-order.dita, capture-order.dita, refund-payment.dita</div>
+    <div style="padding:12px 16px"><div class="note note" style="margin:0"><span class="note-icon">ℹ️</span><div><span class="note-lbl">Note</span>Use the <code>PayPal-Request-Id</code> header on all POST requests. PayPal returns the cached response for duplicate IDs, preventing duplicate charges on retries.</div></div></div>
+  </div>
+  <div style="border:1px solid var(--pp-border);border-radius:12px;margin:14px 0;overflow:hidden">
+    <div style="background:var(--pp-surf2);padding:9px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--pp-purple);border-bottom:1px solid var(--pp-border)">id="token-cache-note" — used in: quickstart.dita, authenticate.dita</div>
+    <div style="padding:12px 16px"><div class="note tip" style="margin:0"><span class="note-icon">💡</span><div><span class="note-lbl">Tip</span>Cache the access token and reuse it until 5 minutes before expiry. Generating a new token per request degrades performance and may trigger rate limits.</div></div></div>
+  </div>
+  <div style="border:1px solid var(--pp-border);border-radius:12px;margin:14px 0;overflow:hidden">
+    <div style="background:var(--pp-surf2);padding:9px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--pp-purple);border-bottom:1px solid var(--pp-border)">id="debug-id-tip" — used in: error-codes.dita</div>
+    <div style="padding:12px 16px"><div class="note tip" style="margin:0"><span class="note-icon">💡</span><div><span class="note-lbl">Tip</span>Always log the <code>debug_id</code> from error responses. Include it when contacting PayPal Developer Support for rapid root-cause analysis.</div></div></div>
+  </div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('dita-map')"><span><span class="tn-lbl">Previous</span>← DITA Map</span></div>
+    <div class="tn-btn" onclick="show('ditaval')"><span><span class="tn-lbl">Next</span>DITAVAL Filters →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-ditaval">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Source Files</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-dv">🔽 DITAVAL</div>
+    <h1 class="ttitle">DITAVAL Filter Files</h1>
+    <div class="shortdesc">Conditional processing filters that control which content is included in each documentation build.</div>
+  </div>
+  <div class="note note"><span class="note-icon">ℹ️</span><div><span class="note-lbl">How it works</span>Selected in <strong>Transform → Configure Transformation Scenario → DITAVAL</strong>. Applied before publishing to include or exclude profiled content blocks.</div></div>
+  <h2>developer-sandbox.ditaval</h2>
+  <p>Use for the sandbox onboarding guide — developer audience with sandbox environment content.</p>
+  <div class="dvr dvr-i"><span class="dv-a">audience</span><span class="dv-eq">=</span><span class="dv-v">"developer"</span><span class="dv-act">✓ Include</span></div>
+  <div class="dvr dvr-e"><span class="dv-a">audience</span><span class="dv-eq">=</span><span class="dv-v">"merchant"</span><span class="dv-act">✗ Exclude</span></div>
+  <div class="dvr dvr-i"><span class="dv-a">platform</span><span class="dv-eq">=</span><span class="dv-v">"sandbox"</span><span class="dv-act">✓ Include</span></div>
+  <div class="dvr dvr-e"><span class="dv-a">platform</span><span class="dv-eq">=</span><span class="dv-v">"live"</span><span class="dv-act">✗ Exclude</span></div>
+  <h2>developer-live.ditaval</h2>
+  <p>Use for the live production guide — developer audience with production environment content.</p>
+  <div class="dvr dvr-i"><span class="dv-a">audience</span><span class="dv-eq">=</span><span class="dv-v">"developer"</span><span class="dv-act">✓ Include</span></div>
+  <div class="dvr dvr-e"><span class="dv-a">audience</span><span class="dv-eq">=</span><span class="dv-v">"merchant"</span><span class="dv-act">✗ Exclude</span></div>
+  <div class="dvr dvr-i"><span class="dv-a">platform</span><span class="dv-eq">=</span><span class="dv-v">"live"</span><span class="dv-act">✓ Include</span></div>
+  <div class="dvr dvr-e"><span class="dv-a">platform</span><span class="dv-eq">=</span><span class="dv-v">"sandbox"</span><span class="dv-act">✗ Exclude</span></div>
+  <h2>Build Matrix</h2>
+  <table class="dtable">
+    <thead><tr><th>DITAVAL File</th><th>Audience</th><th>Platform</th><th>Deliverable</th></tr></thead>
+    <tbody>
+      <tr><td>developer-sandbox.ditaval</td><td>developer</td><td>sandbox</td><td>Sandbox onboarding guide</td></tr>
+      <tr><td>developer-live.ditaval</td><td>developer</td><td>live</td><td>Production developer docs</td></tr>
+      <tr><td>merchant-live.ditaval</td><td>merchant</td><td>live</td><td>Merchant portal guide</td></tr>
+      <tr><td>merchant-sandbox.ditaval</td><td>merchant</td><td>sandbox</td><td>Merchant sandbox testing guide</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:13px;color:var(--pp-muted);font-style:italic">4 distinct deliverables — 1 source, 0 content duplication.</p>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('reuse-lib')"><span><span class="tn-lbl">Previous</span>← Reuse Library</span></div>
+    <div class="tn-btn" onclick="show('schematron')"><span><span class="tn-lbl">Next</span>Schematron Rules →</span></div>
+  </div>
+</div>
+</template>
+
+<template id="tpl-schematron">
+<div class="topic-content">
+  <div class="breadcrumb"><a href="#">PayPal Developer Guide</a><span class="sep">/</span>Source Files</div>
+  <div class="topic-hdr">
+    <div class="topic-type tt-w">✅ Schematron</div>
+    <h1 class="ttitle">Schematron Validation Rules</h1>
+    <div class="shortdesc">Custom Schematron rules enforcing PayPal documentation standards across all DITA topics — runs automatically on every save in Oxygen XML Editor.</div>
+  </div>
+  <div class="note tip"><span class="note-icon">💡</span><div><span class="note-lbl">Oxygen Setup</span>Add via <strong>Preferences → Document Type → DITA → Validation → + Schematron</strong>. Violations appear in the Results panel with file, line, and element path.</div></div>
+  <div class="schpat">
+    <div class="sch-hdr">📋 shortdesc-required <span class="sch-role sr-w">warning</span></div>
+    <div class="sch-body">
+      <div class="sch-row"><div class="sch-k">Context</div><span class="sch-v">concept | task | reference</span></div>
+      <div class="sch-row"><div class="sch-k">Assert</div><span class="sch-v">shortdesc</span></div>
+      <div class="sch-msg">⚠ Topics must include a &lt;shortdesc&gt; for search snippets and WebHelp hover previews.</div>
+    </div>
+  </div>
+  <div class="schpat">
+    <div class="sch-hdr">🆔 topic-id-convention <span class="sch-role sr-e">error</span></div>
+    <div class="sch-body">
+      <div class="sch-row"><div class="sch-k">Context</div><span class="sch-v">concept | task | reference | topic</span></div>
+      <div class="sch-row"><div class="sch-k">Assert</div><span class="sch-v">matches(@id, '^[a-z][a-z0-9\-]+$')</span></div>
+      <div class="sch-err">✖ Topic @id must use lowercase kebab-case — e.g., <code style="color:#7a1a1a">"create-order"</code> not <code style="color:#7a1a1a">"CreateOrder"</code>.</div>
+    </div>
+  </div>
+  <div class="schpat">
+    <div class="sch-hdr">🔗 api-codeblock-method <span class="sch-role sr-w">warning</span></div>
+    <div class="sch-body">
+      <div class="sch-row"><div class="sch-k">Context</div><span class="sch-v">codeblock[contains(., '/v1/') or contains(., '/v2/')]</span></div>
+      <div class="sch-row"><div class="sch-k">Assert</div><span class="sch-v">matches(normalize-space(.), '^(GET|POST|PUT|PATCH|DELETE|curl)')</span></div>
+      <div class="sch-msg">⚠ Codeblocks showing PayPal API calls should start with the HTTP method or 'curl'.</div>
+    </div>
+  </div>
+  <div class="schpat">
+    <div class="sch-hdr">🪜 task-min-steps <span class="sch-role sr-w">warning</span></div>
+    <div class="sch-body">
+      <div class="sch-row"><div class="sch-k">Context</div><span class="sch-v">taskbody/steps</span></div>
+      <div class="sch-row"><div class="sch-k">Assert</div><span class="sch-v">count(step) >= 2</span></div>
+      <div class="sch-msg">⚠ A task with only one step may be better as a note inside a concept topic.</div>
+    </div>
+  </div>
+  <div class="schpat">
+    <div class="sch-hdr">📝 table-title-required <span class="sch-role sr-w">warning</span></div>
+    <div class="sch-body">
+      <div class="sch-row"><div class="sch-k">Context</div><span class="sch-v">table</span></div>
+      <div class="sch-row"><div class="sch-k">Assert</div><span class="sch-v">title</span></div>
+      <div class="sch-msg">⚠ Tables should include a &lt;title&gt; element for accessibility and PDF output labeling.</div>
+    </div>
+  </div>
+  <div class="schpat">
+    <div class="sch-hdr">⚡ step-cmd-required <span class="sch-role sr-e">error</span></div>
+    <div class="sch-body">
+      <div class="sch-row"><div class="sch-k">Context</div><span class="sch-v">step</span></div>
+      <div class="sch-row"><div class="sch-k">Assert</div><span class="sch-v">cmd</span></div>
+      <div class="sch-err">✖ Every &lt;step&gt; must contain a &lt;cmd&gt; element with the instruction text.</div>
+    </div>
+  </div>
+  <div class="tnav">
+    <div class="tn-btn" onclick="show('ditaval')"><span><span class="tn-lbl">Previous</span>← DITAVAL Filters</span></div>
+    <span></span>
+  </div>
+</div>
+</template>
+
+<script>
+const PAGES = {
+  'overview':'tpl-overview','quickstart':'tpl-quickstart','authenticate':'tpl-authenticate',
+  'sandbox':'tpl-sandbox','orders-concept':'tpl-orders-concept','create-order':'tpl-create-order',
+  'capture-order':'tpl-capture-order','payments-concept':'tpl-payments-concept',
+  'capture-payment':'tpl-capture-payment','refund-payment':'tpl-refund-payment',
+  'webhooks-concept':'tpl-webhooks-concept','register-webhook':'tpl-register-webhook',
+  'order-object':'tpl-order-object','payment-object':'tpl-payment-object',
+  'error-codes':'tpl-error-codes','dita-map':'tpl-dita-map','reuse-lib':'tpl-reuse-lib',
+  'ditaval':'tpl-ditaval','schematron':'tpl-schematron'
+};
+
+function show(id) {
+  const tplId = PAGES[id]; if (!tplId) return;
+  const tpl = document.getElementById(tplId); if (!tpl) return;
+  document.getElementById('main').innerHTML = tpl.innerHTML;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
+  document.querySelectorAll('.cb-copy').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const pre = this.closest('.codeblock').querySelector('pre');
+      navigator.clipboard.writeText(pre.innerText).then(() => {
+        this.textContent = 'Copied!';
+        setTimeout(() => this.textContent = 'Copy', 1600);
+      }).catch(() => { this.textContent = 'Copy'; });
+    });
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+document.querySelectorAll('.nav-item[data-id]').forEach(el => {
+  el.addEventListener('click', e => { e.preventDefault(); show(el.dataset.id); });
+});
+
+show('overview');
+</script>
+</body>
+</html>
